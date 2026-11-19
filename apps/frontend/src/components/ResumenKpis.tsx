@@ -40,12 +40,35 @@ export default function ResumenKpis({
     },
   ];
 
+  const total = atajaderos.length || 1;
+  // Color de la barra según el KPI: muestra qué parte del inventario representa.
+  const BARRA: Record<string, string> = {
+    Interrumpen: 'bg-red-600',
+    'A verificar': 'bg-amber-500',
+    'Sin lectura o rezagada': 'bg-slate-500',
+  };
+
   return (
     <dl className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-2">
       {kpis.map((k) => (
-        <div key={k.etiqueta} className="rounded-lg bg-slate-100 px-3 py-2">
-          <dt className="text-xs text-slate-600">{k.etiqueta}</dt>
-          <dd className={`text-2xl font-semibold ${k.clase}`}>{k.valor}</dd>
+        <div key={k.etiqueta} className="rounded-xl border border-tinta/5 bg-white/70 px-3 pb-2.5 pt-2">
+          <dt className="text-xs leading-tight text-slate-600">{k.etiqueta}</dt>
+          <dd className={`numero-ancho mt-0.5 text-[1.7rem] font-extrabold leading-none ${k.clase}`}>
+            {k.valor}
+            {BARRA[k.etiqueta] && (
+              <span className="ml-1 align-baseline text-xs font-medium tracking-normal text-slate-400" style={{ fontStretch: '100%' }}>
+                de {atajaderos.length}
+              </span>
+            )}
+          </dd>
+          {BARRA[k.etiqueta] && (
+            <div className="mt-2 h-1 overflow-hidden rounded-full bg-slate-200" aria-hidden="true">
+              <div
+                className={`h-full rounded-full ${BARRA[k.etiqueta]}`}
+                style={{ width: `${Math.round((k.valor / total) * 100)}%` }}
+              />
+            </div>
+          )}
         </div>
       ))}
     </dl>

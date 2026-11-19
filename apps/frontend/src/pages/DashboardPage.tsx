@@ -5,6 +5,7 @@ import FichaResumen from '@/components/FichaResumen';
 import FormularioAtajaderoModal from '@/components/FormularioAtajaderoModal';
 import FormularioInspeccionModal from '@/components/FormularioInspeccionModal';
 import ImportarKoboModal from '@/components/ImportarKoboModal';
+import Marca from '@/components/Marca';
 import FiltrosTablero, {
   FILTROS_INICIALES,
   FiltrosTableroValor,
@@ -17,6 +18,7 @@ import { useAuth } from '@/context/AuthContext';
 import { descargarGeojson, fetchAtajaderos } from '@/lib/api';
 import { armarColaDecisiones } from '@/lib/dominio';
 import { RIACHOS_FORMOSA_GEOJSON } from '@/data/riachosFormosaGeoJson';
+import { useTema } from '@/lib/useTema';
 import { AtajaderoSummary } from '@/types';
 import type { FeatureCollection } from 'geojson';
 import {
@@ -24,9 +26,12 @@ import {
   ArrowPathIcon,
   ArrowRightOnRectangleIcon,
   ArrowUpTrayIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
   MapIcon,
-  MapPinIcon,
+  MoonIcon,
   PlusIcon,
+  SunIcon,
   TableCellsIcon,
 } from '@heroicons/react/24/outline';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -72,6 +77,25 @@ export default function DashboardPage() {
   const [modal, setModal] = useState<ModalAbierto>(null);
   const [versionDetalle, setVersionDetalle] = useState(0);
   const responsable = user?.name ?? 'Usuario autenticado';
+  const { tema, alternar } = useTema();
+
+  // Panel de triage plegable (solo escritorio) para ver el mapa libre.
+  const [panelOculto, setPanelOculto] = useState(() => {
+    try {
+      return localStorage.getItem('atajaderos_panel_oculto') === '1';
+    } catch {
+      return false;
+    }
+  });
+  const alternarPanel = () =>
+    setPanelOculto((oculto) => {
+      try {
+        localStorage.setItem('atajaderos_panel_oculto', oculto ? '0' : '1');
+      } catch {
+        // sin persistencia: no es crítico
+      }
+      return !oculto;
+    });
 
   const cargar = useCallback(() => {
     setCargando(true);
@@ -160,10 +184,10 @@ export default function DashboardPage() {
       type="button"
       onClick={() => setVista(valor)}
       aria-pressed={vista === valor}
-      className={`inline-flex min-h-[40px] items-center gap-1.5 rounded-md px-3 text-sm font-medium ${
+      className={`presionable inline-flex min-h-[40px] items-center gap-1.5 rounded-lg px-3 text-sm font-semibold ${
         vista === valor
-          ? 'bg-white text-slate-900 shadow-sm'
-          : 'text-slate-600 hover:text-slate-900'
+          ? 'bg-white text-tinta shadow-sm'
+          : 'text-slate-600 hover:text-tinta'
       }`}
     >
       <Icono className="h-4 w-4" aria-hidden="true" />
@@ -177,9 +201,9 @@ export default function DashboardPage() {
       <CopilotoIaPanel modo="resumir_triage_mesa" />
       <FiltrosTablero valor={filtros} onCambiar={setFiltros} cuencas={cuencas} />
       <div>
-        <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-slate-900">Requiere decisión</h2>
-          <span className="rounded-full bg-teal-700 px-2 py-0.5 text-xs font-semibold text-white">
+        <div className="mb-2.5 flex items-center justify-between">
+          <h2 className="titulo-ancho text-base font-extrabold text-tinta">Requiere decisión</h2>
+          <span className="numero-ancho rounded-full bg-tinta px-2.5 py-0.5 text-xs font-bold text-white">
             {cola.length}
           </span>
         </div>
@@ -193,27 +217,31 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="flex min-h-screen flex-col overflow-x-hidden bg-slate-50 text-slate-900 lg:h-screen">
+    <div
+      className={`flex min-h-screen flex-col overflow-x-hidden bg-papel text-tinta lg:h-screen ${
+        tema === 'oscuro' ? 'oscuro' : ''
+      }`}
+    >
       <PrototypeBanner />
 
-      <header className="border-b border-slate-200 bg-white">
-        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3">
-          <div className="flex items-center gap-2">
-            <MapPinIcon className="h-6 w-6 text-teal-700" aria-hidden="true" />
-            <span className="text-base font-bold text-slate-900">
-              Tablero territorial de atajaderos
+      <header className="relative z-20 border-b border-tinta/10 bg-white">
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-2.5">
+          <div className="flex items-center gap-4">
+            <Marca a="/dashboard" subtitulo={false} />
+            <span className="hidden border-l border-tinta/10 pl-4 text-sm text-slate-500 md:inline">
+              Tablero territorial
             </span>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <div className="flex rounded-lg bg-slate-100 p-1">
+            <div className="flex rounded-xl bg-slate-100 p-1">
               {botonVista('mapa', 'Mapa', MapIcon)}
               {botonVista('tabla', 'Tabla', TableCellsIcon)}
             </div>
             <button
               type="button"
               onClick={() => setModal({ tipo: 'alta' })}
-              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg bg-teal-700 px-3 text-sm font-semibold text-white hover:bg-teal-800"
+              className="presionable inline-flex min-h-[44px] items-center gap-1.5 rounded-xl bg-teal-700 px-3.5 text-sm font-semibold text-white shadow-sm shadow-teal-900/20 hover:bg-teal-800"
             >
               <PlusIcon className="h-4 w-4" aria-hidden="true" />
               Nuevo atajadero
@@ -221,7 +249,7 @@ export default function DashboardPage() {
             <button
               type="button"
               onClick={() => setModal({ tipo: 'kobo' })}
-              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              className="presionable inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-tinta/15 bg-white px-3 text-sm font-semibold text-tinta hover:border-tinta/30"
               title="Importar relevamiento KoboToolbox / QField"
             >
               <ArrowUpTrayIcon className="h-4 w-4" aria-hidden="true" />
@@ -230,7 +258,7 @@ export default function DashboardPage() {
             <button
               type="button"
               onClick={() => void descargarGeojson()}
-              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              className="presionable inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border border-tinta/15 bg-white px-3 text-sm font-semibold text-tinta hover:border-tinta/30"
               title="Descargar GeoJSON para QGIS / QField"
             >
               <ArrowDownTrayIcon className="h-4 w-4" aria-hidden="true" />
@@ -241,8 +269,22 @@ export default function DashboardPage() {
             </span>
             <button
               type="button"
+              onClick={alternar}
+              aria-pressed={tema === 'oscuro'}
+              aria-label={tema === 'oscuro' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+              title={tema === 'oscuro' ? 'Modo claro' : 'Modo oscuro'}
+              className="presionable flex h-11 w-11 items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100 hover:text-tinta"
+            >
+              {tema === 'oscuro' ? (
+                <SunIcon className="h-5 w-5" aria-hidden="true" />
+              ) : (
+                <MoonIcon className="h-5 w-5" aria-hidden="true" />
+              )}
+            </button>
+            <button
+              type="button"
               onClick={logout}
-              className="inline-flex min-h-[44px] items-center gap-1 rounded-lg px-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+              className="presionable inline-flex min-h-[44px] items-center gap-1 rounded-xl px-2.5 text-sm font-medium text-slate-600 hover:bg-slate-100"
             >
               <ArrowRightOnRectangleIcon className="h-4 w-4" aria-hidden="true" />
               Salir
@@ -301,8 +343,9 @@ export default function DashboardPage() {
           </div>
 
           {actual && (
-            <div className="px-4 pt-4 lg:absolute lg:right-4 lg:top-16 lg:z-10 lg:max-h-[calc(100%-9rem)] lg:w-[340px] lg:overflow-y-auto lg:p-0">
+            <div className="px-4 pt-4 lg:absolute lg:right-4 lg:top-16 lg:z-10 lg:max-h-[calc(100%-9rem)] lg:w-[348px] lg:overflow-y-auto lg:rounded-2xl lg:p-0">
               <FichaResumen
+                key={actual.codigo_unico}
                 atajadero={actual}
                 onCerrar={() => setSeleccionado(null)}
                 onVerFicha={verFicha}
@@ -310,12 +353,47 @@ export default function DashboardPage() {
             </div>
           )}
 
-          <aside
-            aria-label="Triage de la mesa"
-            className="space-y-4 p-4 lg:absolute lg:bottom-4 lg:left-4 lg:top-4 lg:z-10 lg:w-[380px] lg:overflow-y-auto lg:rounded-xl lg:border lg:border-slate-200 lg:bg-white lg:shadow-lg"
+          {/* Contenedor sin overflow: la pestaña de plegado sobresale del panel
+              sin recortarse. En móvil es flujo normal (no se pliega). */}
+          <div
+            data-oculto={panelOculto}
+            className="panel-plegable lg:absolute lg:bottom-4 lg:left-4 lg:top-4 lg:z-10 lg:w-[388px]"
           >
-            {panelTriage}
-          </aside>
+            <aside
+              id="panel-triage"
+              aria-label="Triage de la mesa"
+              className="space-y-4 p-4 lg:h-full lg:overflow-y-auto lg:rounded-2xl lg:panel-flotante"
+            >
+              {panelTriage}
+            </aside>
+            <button
+              type="button"
+              onClick={alternarPanel}
+              aria-expanded={!panelOculto}
+              aria-controls="panel-triage"
+              aria-label="Ocultar panel"
+              title="Ocultar panel"
+              className="presionable panel-flotante absolute -right-4 top-5 hidden h-11 w-8 items-center justify-center rounded-r-xl rounded-l-none border-l-0 text-slate-600 hover:text-tinta lg:flex"
+            >
+              <ChevronLeftIcon className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </div>
+
+          {panelOculto && (
+            <button
+              type="button"
+              onClick={alternarPanel}
+              aria-expanded={false}
+              aria-controls="panel-triage"
+              className="presionable entrada-suave panel-flotante absolute left-4 top-4 z-10 hidden min-h-[44px] items-center gap-2 rounded-xl px-3.5 text-sm font-semibold text-tinta lg:inline-flex"
+            >
+              Requiere decisión
+              <span className="numero-ancho rounded-full bg-tinta px-2 py-0.5 text-xs font-bold text-white">
+                {cola.length}
+              </span>
+              <ChevronRightIcon className="h-4 w-4 text-slate-500" aria-hidden="true" />
+            </button>
+          )}
         </main>
       )}
 

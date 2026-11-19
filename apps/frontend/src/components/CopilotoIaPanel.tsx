@@ -76,7 +76,7 @@ export default function CopilotoIaPanel({
             type="button"
             onClick={() => void consultar()}
             disabled={cargando}
-            className="inline-flex min-h-[40px] items-center rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+            className="presionable inline-flex min-h-[40px] items-center rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-tinta hover:border-slate-400 disabled:opacity-60"
           >
             {cargando ? 'Generando…' : 'Generar borrador'}
           </button>

@@ -127,7 +127,7 @@ export default function TablaAtajaderos({
                     {a.nombre_referencia}
                   </span>
                   <span className="text-xs text-slate-500">
-                    {a.cuenca_riacho} · {a.departamento}
+                    <span className="rotulo-agua">{a.cuenca_riacho}</span>, {a.departamento}
                   </span>
                 </td>
                 <td className="px-3 py-2.5">

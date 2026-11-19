@@ -1,6 +1,346 @@
 @import "tailwindcss";
 
+/* =========================================================================
+   Sistema visual: cartografía hidrográfica de campo.
+   Tinta y papel fríos, teal del repo como acción, azul solo para el agua,
+   tierra solo para el terraplén. El semáforo (rojo/ámbar/verde) lo fija la spec.
+   ========================================================================= */
+@theme {
+  --font-sans: "Archivo", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --color-tinta: #0f2a2e;
+  --color-papel: #f5f7f6;
+  --color-agua: #2b6cb0;
+  --color-agua-claro: #d6e6f5;
+  --color-tierra: #8a6b4a;
+  --color-tierra-claro: #c9b393;
+
+  /* Curvas de Emil Kowalski: ease-out fuerte para entradas, in-out para movimiento. */
+  --ease-salida: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-movimiento: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    font-variant-numeric: tabular-nums;
+  }
+  /* Foco visible y consistente para teclado (no para clic). */
+  :focus-visible {
+    outline: 2px solid var(--color-teal-600);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+}
+
+/* =========================================================================
+   Modo oscuro del tablero (remapeo de tokens).
+   Tailwind v4 resuelve cada color con var(--color-*): redefiniendo las
+   variables dentro de .oscuro, toda la interfaz cambia sin tocar componentes.
+   Las escalas se invierten (fondos claros -> superficies oscuras, textos
+   oscuros -> claros). Solo se aplica al tablero y sus modales.
+   ========================================================================= */
+.oscuro {
+  color-scheme: dark;
+
+  --color-papel: #0b1416;
+  --color-white: #131f22;
+  --color-tinta: #e6efee;
+  --color-agua: #7cb4e8;
+  --color-agua-claro: #16324a;
+
+  --color-slate-50: #111c1f;
+  --color-slate-100: #18262b;
+  --color-slate-200: #233439;
+  --color-slate-300: #34484f;
+  --color-slate-400: #5d727a;
+  --color-slate-500: #8b9da4;
+  --color-slate-600: #a9b8be;
+  --color-slate-700: #c6d2d6;
+  --color-slate-800: #dde6e9;
+  --color-slate-900: #eef3f5;
+  --color-slate-950: #f8fafb;
+
+  /* Acción principal: teal más luminoso; el "texto blanco" encima pasa a
+     ser la superficie oscura, así el contraste se mantiene. */
+  --color-teal-50: #0e2b28;
+  --color-teal-100: #123d39;
+  --color-teal-200: #17544e;
+  --color-teal-300: #1d7a70;
+  --color-teal-600: #2dd4bf;
+  --color-teal-700: #2bc4b0;
+  --color-teal-800: #5eead4;
+  --color-teal-900: #99f6e4;
+  --color-teal-950: #ccfbf1;
+
+  --color-red-50: #2a1315;
+  --color-red-100: #3a1619;
+  --color-red-200: #5a2125;
+  --color-red-300: #7a2b30;
+  --color-red-600: #f87171;
+  --color-red-700: #fca5a5;
+  --color-red-800: #fecaca;
+
+  --color-amber-50: #29200c;
+  --color-amber-100: #3b2d0d;
+  --color-amber-200: #5a4312;
+  --color-amber-300: #7a5b17;
+  --color-amber-600: #fbbf24;
+  --color-amber-700: #fcd34d;
+  --color-amber-800: #fde68a;
+  --color-amber-900: #fef3c7;
+  --color-amber-950: #fffbeb;
+
+  --color-green-50: #0f2417;
+  --color-green-200: #1e4a2c;
+  --color-green-600: #4ade80;
+  --color-green-800: #bbf7d0;
+
+  --color-sky-50: #0c2230;
+  --color-sky-600: #38bdf8;
+  --color-sky-800: #bae6fd;
+
+  background-color: var(--color-papel);
+  color: var(--color-tinta);
+}
+
+/* Utilidades de identidad (con @utility aceptan variantes como lg:). */
+
+/* Títulos con ancho expandido: el tipo como parte del diseño. */
+@utility titulo-ancho {
+  font-stretch: 118%;
+  letter-spacing: -0.02em;
+}
+@utility numero-ancho {
+  font-stretch: 125%;
+  letter-spacing: -0.03em;
+  font-feature-settings: "tnum";
+}
+
+/* Convención cartográfica: la hidrografía se rotula en cursiva azul. */
+@utility rotulo-agua {
+  color: var(--color-agua);
+  font-style: italic;
+}
+
+/* Paneles flotantes sobre el mapa: vidrio esmerilado sutil + sombra en capas. */
+@utility panel-flotante {
+  /* var(--color-white), no "white": así el modo oscuro también lo remapea. */
+  background: color-mix(in oklab, var(--color-white) 94%, transparent);
+  backdrop-filter: blur(16px) saturate(1.2);
+  border: 1px solid color-mix(in oklab, var(--color-tinta) 10%, transparent);
+  box-shadow:
+    0 1px 2px rgb(15 42 46 / 0.06),
+    0 8px 24px -6px rgb(15 42 46 / 0.14);
+}
+
+/* -------------------------------------------------------------------------
+   Movimiento. Solo transform/opacity; todo respeta reduced-motion.
+   ------------------------------------------------------------------------- */
+
+/* Feedback de presión en todo lo presionable (100-160 ms). */
+.presionable {
+  transition:
+    transform 160ms var(--ease-salida),
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease;
+}
+.presionable:active {
+  transform: scale(0.97);
+}
+
+/* Entrada de modales: nunca desde scale(0); origen centrado (no es un popover). */
+@keyframes aparecer-fondo {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes aparecer-panel {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+}
+.modal-fondo {
+  animation: aparecer-fondo 180ms ease-out;
+}
+.modal-panel {
+  animation: aparecer-panel 220ms var(--ease-salida);
+}
+
+/* Cambio de atajadero en la ficha lateral. */
+@keyframes deslizar-entrada {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+.entrada-suave {
+  animation: deslizar-entrada 200ms var(--ease-salida);
+}
+
+/* Único movimiento no disparado por el usuario en el tablero: pulso lento en
+   los bloqueos activos, para que la mesa los vea primero. */
+@keyframes pulso-bloqueo {
+  0% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  80%,
+  100% {
+    opacity: 0;
+    transform: scale(2.4);
+  }
+}
+.marcador-pulso {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pulso-bloqueo 2.4s var(--ease-salida) infinite;
+  pointer-events: none;
+}
+
+/* Panel de triage plegable (escritorio). Al ocultarse, visibility pasa a
+   hidden recién al terminar el deslizamiento: así el Tab no cae en botones
+   invisibles. Al mostrarse, visibility vuelve de inmediato. */
+@media (min-width: 1024px) {
+  .panel-plegable {
+    transition:
+      transform 260ms var(--ease-movimiento),
+      visibility 0s linear 0s;
+  }
+  .panel-plegable[data-oculto="true"] {
+    transform: translateX(calc(-100% - 2rem));
+    visibility: hidden;
+    transition:
+      transform 260ms var(--ease-movimiento),
+      visibility 0s linear 260ms;
+  }
+}
+
+/* Hover solo en dispositivos con puntero fino (en táctil el hover queda pegado). */
+@media (hover: hover) and (pointer: fine) {
+  .elevable {
+    transition:
+      transform 200ms var(--ease-salida),
+      box-shadow 200ms var(--ease-salida),
+      border-color 150ms ease;
+  }
+  .elevable:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px -8px rgb(15 42 46 / 0.25);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal-panel,
+  .entrada-suave {
+    animation: aparecer-fondo 150ms ease-out;
+  }
+  .marcador-pulso {
+    animation: none;
+    opacity: 0;
+  }
+  .presionable:active {
+    transform: none;
+  }
+  .panel-plegable,
+  .panel-plegable[data-oculto="true"] {
+    transition: none;
+  }
+}
+
+/* -------------------------------------------------------------------------
+   Mapa
+   ------------------------------------------------------------------------- */
+
 /* Mapa base neutro: solo el semáforo de los marcadores aporta color. */
 .capa-base-gris {
-  filter: grayscale(1) contrast(1.05) brightness(1.02);
+  filter: grayscale(1) contrast(1.05) brightness(1.03);
+}
+
+/* Controles de Leaflet con el mismo lenguaje que el resto de la interfaz. */
+.leaflet-container {
+  font-family: var(--font-sans);
+  background: var(--color-papel);
+}
+.leaflet-bar,
+.leaflet-control-layers {
+  border: 1px solid color-mix(in oklab, var(--color-tinta) 12%, transparent) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 4px 14px -4px rgb(15 42 46 / 0.2) !important;
+  overflow: hidden;
+}
+.leaflet-bar a {
+  width: 36px !important;
+  height: 36px !important;
+  line-height: 36px !important;
+  color: var(--color-tinta) !important;
+}
+.leaflet-control-layers-expanded {
+  padding: 10px 12px !important;
+  font-size: 13px;
+  color: var(--color-tinta);
+}
+.leaflet-popup-content-wrapper {
+  border-radius: 12px;
+  box-shadow: 0 10px 30px -8px rgb(15 42 46 / 0.3);
+}
+.leaflet-popup-content {
+  margin: 14px 16px;
+}
+.leaflet-tooltip {
+  border-radius: 6px;
+  border: none;
+  background: var(--color-tinta);
+  color: white;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  box-shadow: none;
+}
+.leaflet-tooltip-top::before {
+  border-top-color: var(--color-tinta);
+}
+.leaflet-control-attribution {
+  font-size: 10px;
+  background: color-mix(in oklab, var(--color-white) 80%, transparent) !important;
+}
+
+/* Leaflet trae blancos fijos en su propio CSS: se alinean con los tokens. */
+.oscuro .leaflet-bar a,
+.oscuro .leaflet-control-layers,
+.oscuro .leaflet-popup-content-wrapper,
+.oscuro .leaflet-popup-tip {
+  background: var(--color-white);
+  color: var(--color-tinta);
+}
+.oscuro .leaflet-bar a {
+  border-bottom-color: var(--color-slate-200);
+}
+.oscuro .leaflet-control-layers-toggle {
+  filter: invert(1);
+}
+.oscuro .leaflet-control-attribution a {
+  color: var(--color-agua);
+}
+.oscuro .leaflet-tooltip {
+  background: var(--color-slate-900);
+  color: var(--color-papel);
+}
+.oscuro .leaflet-tooltip-top::before {
+  border-top-color: var(--color-slate-900);
+}
+
+/* Teselas del IGN invertidas: mapa oscuro sin tocar la capa satelital. */
+.oscuro .capa-base-gris {
+  filter: grayscale(1) invert(1) brightness(0.82) contrast(0.92);
+}
+
+/* El borde de los marcadores es un atributo SVG (#0f172a): CSS lo pisa para
+   que se distingan sobre el mapa oscuro. No afecta al pulso (sin borde). */
+.oscuro .leaflet-overlay-pane path.leaflet-interactive {
+  stroke: #e6efee;
 }

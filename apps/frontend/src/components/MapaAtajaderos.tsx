@@ -167,6 +167,19 @@ export default function MapaAtajaderos({
     porCodigoRef.current.clear();
 
     atajaderos.forEach((a) => {
+      // Bloqueo activo (misma regla que la cola de decisiones): pulso lento
+      // debajo del marcador, sin interacción, para que la mesa lo vea primero.
+      if (a.interrumpe_escurrimiento === 'si' && a.estado !== 'fuera_de_servicio') {
+        L.circleMarker([a.latitud, a.longitud], {
+          radius: 9,
+          stroke: false,
+          fillColor: COLOR_ESCURRIMIENTO.si,
+          fillOpacity: 0.5,
+          interactive: false,
+          className: 'marcador-pulso',
+        }).addTo(grupo);
+      }
+
       const marcador = L.circleMarker([a.latitud, a.longitud], {
         radius: 8,
         color: '#0f172a',
@@ -178,14 +191,14 @@ export default function MapaAtajaderos({
 
       marcador.bindTooltip(a.codigo_unico, { direction: 'top', offset: [0, -8] });
       marcador.bindPopup(
-        `<div class="text-sm">
-          <p class="font-mono text-xs font-semibold">${escaparHtml(a.codigo_unico)}</p>
-          <p class="mt-1 font-semibold text-slate-900">${escaparHtml(a.nombre_referencia)}</p>
-          <p class="text-xs text-slate-600">${escaparHtml(a.cuenca_riacho)} · ${escaparHtml(a.departamento)}</p>
+        `<div class="min-w-[190px] text-sm">
+          <p class="font-mono text-xs font-semibold text-tinta">${escaparHtml(a.codigo_unico)}</p>
+          <p class="mt-1 text-[15px] font-bold leading-snug text-tinta">${escaparHtml(a.nombre_referencia)}</p>
+          <p class="mt-0.5 text-xs text-slate-600"><span class="rotulo-agua font-semibold">${escaparHtml(a.cuenca_riacho)}</span>, Dpto. ${escaparHtml(a.departamento)}</p>
           ${
             onVerFichaRef.current
               ? `<button type="button" data-ver-ficha="${escaparHtml(a.codigo_unico)}"
-            class="mt-2 min-h-[36px] w-full rounded-md bg-teal-700 px-3 text-xs font-semibold text-white hover:bg-teal-800">
+            class="presionable mt-3 min-h-[38px] w-full rounded-lg bg-teal-700 px-3 text-xs font-semibold text-white hover:bg-teal-800">
             Ver ficha e historial
           </button>`
               : ''
