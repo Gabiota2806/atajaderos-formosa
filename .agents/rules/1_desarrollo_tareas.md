@@ -18,8 +18,8 @@ Esta regla rige de forma permanente en todas las sesiones y conversaciones en **
      * Consulta `docs/specs/<modulo>/spec.md` y `docs/specs/global_spec.md` para extraer Requerimientos Funcionales (RF) y escenarios Gherkin.
    - **Inspección de Estado Vivo**:
      * Inspeccionar migraciones Alembic (`apps/backend/alembic/versions/`), modelos SQLAlchemy (`apps/backend/app/models/`), schemas Pydantic (`apps/backend/app/schemas/`) y componentes React (`apps/frontend/src/`).
-   - DEBES pausar y esperar el "OK" explícito del desarrollador sobre el plan antes de tocar código.
-   - Tras el "OK", sincroniza `develop`, crea la rama `feat/<num>-<slug>` (o `fix/<num>-<slug>`) y súbela a GitHub.
+   - DEBES pausar y esperar el "OK" explícito del desarrollador sobre el plan antes de tocar código, **salvo en Modo Desatendido por Rol (`/goal` sobre Specs SDD ya aprobadas en `docs/specs/00_CORE_CONTRACTS.md`)**, donde el plan ya fue aprobado en la especificación.
+   - Tras el "OK" (o al iniciar en modo desatendido SDD), sincroniza `develop`, crea la rama `feat/<num>-<slug>` (o `fix/<num>-<slug>`) y súbela a GitHub.
 
 2. **TDD, SMOKE TESTING Y PRE-VERIFICACIÓN TÉCNICA EN NAVEGADOR (100 % DOCKER)**:
    - **TDD Estricto (`pytest` en Docker)**: Escribe o actualiza pruebas en `apps/backend/tests/` cubriendo flujo feliz y al menos un **caso de entrada inválida** antes o en paralelo al código de producción.
@@ -35,7 +35,7 @@ Esta regla rige de forma permanente en todas las sesiones y conversaciones en **
    - **Entrega de la Guía de QA Manual**:
      * **En Modo Local**: Apuntar a `http://localhost:5173` (y Swagger backend en `http://localhost:8000/docs`).
      * **En Modo Remoto (móvil/campo)**: Ejecutar `./scripts/tunnel.sh start 5173` y entregar la URL `https://*.trycloudflare.com`. Al finalizar QA, cerrar con `./scripts/tunnel.sh stop`.
-   - **PAUSA OBLIGATORIA**: Esperar el "OK" explícito confirmando las pruebas en el navegador.
+   - **PAUSA OBLIGATORIA**: Esperar el "OK" explícito confirmando las pruebas en el navegador. **Excepción Modo Desatendido (`/goal`)**: si el desarrollador indicó ejecución autónoma sobre su módulo SDD (`00_CORE_CONTRACTS.md` + `spec.md` asignada), el agente completa TDD (`pytest`, `ruff`, `bun run build`), commitea en su rama `feat/<num>-<slug>` y deja la **PR abierta hacia `develop`**, manteniendo la **prohibición absoluta de auto-merge** para preservar la revisión y QA humana antes de fusionar.
 
 3. **REGISTRO EN DOCUMENTACIÓN Y COMMIT (SOLO TRAS EL OK DE QA)**:
    - Marca la subtarea como completada `[x]` en `docs/specs/<modulo>/spec.md` (y en `docs/02_backlog.md` si aplica).
