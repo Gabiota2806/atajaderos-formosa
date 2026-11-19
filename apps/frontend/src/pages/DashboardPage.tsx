@@ -25,6 +25,8 @@ import {
   ArrowPathIcon,
   ArrowRightOnRectangleIcon,
   ArrowUpTrayIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
   MapIcon,
   MoonIcon,
   PlusIcon,
@@ -79,6 +81,24 @@ export default function DashboardPage() {
   const [versionDetalle, setVersionDetalle] = useState(0);
   const responsable = user?.name ?? 'Usuario autenticado';
   const { tema, alternar } = useTema();
+
+  // Panel de triage plegable (solo escritorio) para ver el mapa libre.
+  const [panelOculto, setPanelOculto] = useState(() => {
+    try {
+      return localStorage.getItem('atajaderos_panel_oculto') === '1';
+    } catch {
+      return false;
+    }
+  });
+  const alternarPanel = () =>
+    setPanelOculto((oculto) => {
+      try {
+        localStorage.setItem('atajaderos_panel_oculto', oculto ? '0' : '1');
+      } catch {
+        // sin persistencia: no es crítico
+      }
+      return !oculto;
+    });
 
   const cargar = useCallback(() => {
     setCargando(true);
@@ -336,12 +356,47 @@ export default function DashboardPage() {
             </div>
           )}
 
-          <aside
-            aria-label="Triage de la mesa"
-            className="space-y-4 p-4 lg:absolute lg:bottom-4 lg:left-4 lg:top-4 lg:z-10 lg:w-[388px] lg:overflow-y-auto lg:rounded-2xl lg:panel-flotante"
+          {/* Contenedor sin overflow: la pestaña de plegado sobresale del panel
+              sin recortarse. En móvil es flujo normal (no se pliega). */}
+          <div
+            data-oculto={panelOculto}
+            className="panel-plegable lg:absolute lg:bottom-4 lg:left-4 lg:top-4 lg:z-10 lg:w-[388px]"
           >
-            {panelTriage}
-          </aside>
+            <aside
+              id="panel-triage"
+              aria-label="Triage de la mesa"
+              className="space-y-4 p-4 lg:h-full lg:overflow-y-auto lg:rounded-2xl lg:panel-flotante"
+            >
+              {panelTriage}
+            </aside>
+            <button
+              type="button"
+              onClick={alternarPanel}
+              aria-expanded={!panelOculto}
+              aria-controls="panel-triage"
+              aria-label="Ocultar panel"
+              title="Ocultar panel"
+              className="presionable panel-flotante absolute -right-4 top-5 hidden h-11 w-8 items-center justify-center rounded-r-xl rounded-l-none border-l-0 text-slate-600 hover:text-tinta lg:flex"
+            >
+              <ChevronLeftIcon className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </div>
+
+          {panelOculto && (
+            <button
+              type="button"
+              onClick={alternarPanel}
+              aria-expanded={false}
+              aria-controls="panel-triage"
+              className="presionable entrada-suave panel-flotante absolute left-4 top-4 z-10 hidden min-h-[44px] items-center gap-2 rounded-xl px-3.5 text-sm font-semibold text-tinta lg:inline-flex"
+            >
+              Requiere decisión
+              <span className="numero-ancho rounded-full bg-tinta px-2 py-0.5 text-xs font-bold text-white">
+                {cola.length}
+              </span>
+              <ChevronRightIcon className="h-4 w-4 text-slate-500" aria-hidden="true" />
+            </button>
+          )}
         </main>
       )}
 

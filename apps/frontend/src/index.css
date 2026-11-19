@@ -202,6 +202,24 @@
   pointer-events: none;
 }
 
+/* Panel de triage plegable (escritorio). Al ocultarse, visibility pasa a
+   hidden recién al terminar el deslizamiento: así el Tab no cae en botones
+   invisibles. Al mostrarse, visibility vuelve de inmediato. */
+@media (min-width: 1024px) {
+  .panel-plegable {
+    transition:
+      transform 260ms var(--ease-movimiento),
+      visibility 0s linear 0s;
+  }
+  .panel-plegable[data-oculto="true"] {
+    transform: translateX(calc(-100% - 2rem));
+    visibility: hidden;
+    transition:
+      transform 260ms var(--ease-movimiento),
+      visibility 0s linear 260ms;
+  }
+}
+
 /* Hover solo en dispositivos con puntero fino (en táctil el hover queda pegado). */
 @media (hover: hover) and (pointer: fine) {
   .elevable {
@@ -227,6 +245,10 @@
   }
   .presionable:active {
     transform: none;
+  }
+  .panel-plegable,
+  .panel-plegable[data-oculto="true"] {
+    transition: none;
   }
 }
 
