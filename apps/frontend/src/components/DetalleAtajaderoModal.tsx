@@ -34,6 +34,13 @@ interface DetalleAtajaderoModalProps {
   version?: number;
 }
 
+// El backend (#2) hoy guarda la evidencia del aviso también como texto dentro
+// de observaciones_iniciales ("[EVIDENCIA_INICIAL:{...}]"), además de
+// devolverla en evidencia_inicial_fotos. Se oculta ese bloque en la vista.
+function textoAvisoInicial(texto: string | null | undefined): string {
+  return (texto ?? '').replace(/\s*\[EVIDENCIA_INICIAL:[\s\S]*\]\s*$/, '').trim();
+}
+
 function fechaHora(iso: string): string {
   return new Date(iso).toLocaleString('es-AR', {
     day: '2-digit',
@@ -306,6 +313,43 @@ export default function DetalleAtajaderoModal({
             </section>
 
             <aside className="space-y-4">
+              {/* Booleano explícito: con 0 fotos, `length` dibujaría un "0" suelto. */}
+              {Boolean(textoAvisoInicial(detalle.observaciones_iniciales) || detalle.evidencia_inicial_fotos?.length) && (
+                <section
+                  aria-label="Origen del registro"
+                  className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm"
+                >
+                  <p className="text-xs font-semibold text-amber-900">Origen del registro</p>
+                  {textoAvisoInicial(detalle.observaciones_iniciales) && (
+                    <p className="mt-1 leading-relaxed text-amber-950">
+                      {textoAvisoInicial(detalle.observaciones_iniciales)}
+                    </p>
+                  )}
+                  {detalle.reportado_por && (
+                    <p className="mt-1 text-xs text-amber-900">Reportado por: {detalle.reportado_por}</p>
+                  )}
+                  {detalle.evidencia_inicial_fotos?.map((url, i) => {
+                    const hash = detalle.evidencia_inicial_hashes_sha256?.[i];
+                    return (
+                      <a key={url} href={url} target="_blank" rel="noreferrer" className="mt-2 block">
+                        <img
+                          src={url}
+                          alt="Foto adjunta al aviso inicial"
+                          className="max-h-40 w-full rounded-md object-cover"
+                        />
+                        {hash && (
+                          <span
+                            className="mt-1 block truncate font-mono text-[10px] text-amber-900"
+                            title={`SHA-256: ${hash}`}
+                          >
+                            SHA-256 {hash.slice(0, 10)}…
+                          </span>
+                        )}
+                      </a>
+                    );
+                  })}
+                </section>
+              )}
               <CopilotoIaPanel modo="resumir_triage_mesa" codigoUnico={codigo} />
               <dl className="space-y-3 rounded-lg border border-slate-200 p-3 text-sm">
                 <div>

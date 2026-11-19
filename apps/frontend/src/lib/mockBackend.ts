@@ -196,7 +196,7 @@ function agregarInspeccion(
   evidencia: { url: string; hash: string | null } | null,
 ): InspeccionResponse {
   const registro: InspeccionResponse = {
-    id: db.inspecciones.reduce((m, i) => Math.max(m, i.id), 0) + 1,
+    id: `sim-${db.inspecciones.length + 1}-${Date.now()}`,
     atajadero_codigo: a.codigo_unico,
     fecha_inspeccion: ahoraLocalIso(),
     responsable,

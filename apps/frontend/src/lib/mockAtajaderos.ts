@@ -141,7 +141,7 @@ export function historialSimulado(): InspeccionResponse[] {
   return Object.entries(HISTORIAL).flatMap(([codigo, registros]) =>
     registros.map((r) => ({
       ...r,
-      id: ++id,
+      id: `sim-${++id}`,
       atajadero_codigo: codigo,
       evidencia_fotos: [],
       fotos_hashes_sha256: [],
