@@ -12,6 +12,8 @@ export const LIMITES_FORMOSA = {
 
 export const MIN_CARACTERES_DESCRIPCION = 10;
 export const MIN_CARACTERES_OBSERVACIONES = 10;
+// El backend real rechaza con 422 nombres de menos de 3 caracteres.
+export const MIN_CARACTERES_NOMBRE = 3;
 
 export const MENSAJE_FUERA_DE_FORMOSA =
   'La ubicación tiene que estar dentro de la provincia de Formosa.';
@@ -33,7 +35,7 @@ export function validarAviso(p: AvisoPayload): Record<string, string> {
   if (!dentroDeFormosa(p.latitud, p.longitud)) {
     errores.ubicacion = `${MENSAJE_FUERA_DE_FORMOSA} Marcá el punto en el mapa o usá tu GPS.`;
   }
-  if (!p.nombre_referencia.trim()) {
+  if (p.nombre_referencia.trim().length < MIN_CARACTERES_NOMBRE) {
     errores.nombre_referencia = 'Contanos cómo se conoce el lugar (paraje, campo o ruta).';
   }
   if (!p.departamento) {
@@ -50,7 +52,9 @@ export function validarAtajadero(p: AtajaderoCreate): Record<string, string> {
   if (!dentroDeFormosa(p.latitud, p.longitud)) {
     errores.ubicacion = `${MENSAJE_FUERA_DE_FORMOSA} Marcá el punto en el mapa.`;
   }
-  if (!p.nombre_referencia.trim()) errores.nombre_referencia = 'Ingresá un nombre de referencia.';
+  if (p.nombre_referencia.trim().length < MIN_CARACTERES_NOMBRE) {
+    errores.nombre_referencia = `El nombre de referencia necesita al menos ${MIN_CARACTERES_NOMBRE} caracteres.`;
+  }
   if (!p.departamento) errores.departamento = 'Elegí el departamento.';
   if (!p.cuenca_riacho.trim()) errores.cuenca_riacho = 'Ingresá el riacho o cuenca.';
   return errores;

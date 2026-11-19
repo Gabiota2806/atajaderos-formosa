@@ -64,11 +64,21 @@ export interface AtajaderoSummary {
   criterio_validado_por: string | null;
   fecha_ultima_inspeccion: string | null;
   total_inspecciones: number;
+  // Campos que agrega el backend real (opcionales: el mock no los tiene).
+  id?: string;
+  observaciones_iniciales?: string | null;
+  reportado_por?: string | null;
+  fuente_referencia?: string | null;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface InspeccionResponse {
-  id: number;
-  atajadero_codigo: string;
+  // UUID en el backend real.
+  id: string;
+  atajadero_id?: string;
+  atajadero_codigo?: string;
+  inspector_id?: number | null;
   fecha_inspeccion: string;
   responsable: string;
   tipo_registro: TipoRegistro;
@@ -82,6 +92,9 @@ export interface InspeccionResponse {
 
 export interface AtajaderoDetail extends AtajaderoSummary {
   inspecciones: InspeccionResponse[];
+  // Foto del aviso vecinal que dio de alta el registro (POST /api/avisos).
+  evidencia_inicial_fotos?: string[];
+  evidencia_inicial_hashes_sha256?: string[];
 }
 
 export interface AtajaderoListResponse {
@@ -144,10 +157,19 @@ export interface KoboImportItem {
   observaciones?: string;
 }
 
+// La interfaz siempre recibe los errores ya como texto (api.ts normaliza).
 export interface KoboImportResult {
   creados: number;
   inspecciones_agregadas: number;
   errores: string[];
+  codigos_procesados?: string[];
+}
+
+// Forma real de cada error del backend en POST /api/atajaderos/importar-kobo.
+export interface KoboImportErrorApi {
+  indice: number;
+  codigo_unico: string | null;
+  detalle: string;
 }
 
 // POST /api/asistente/resumir (solo lectura respecto a la base de datos)

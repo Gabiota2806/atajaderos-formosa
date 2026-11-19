@@ -12,6 +12,7 @@ import {
   HealthResponse,
   InspeccionCreate,
   InspeccionResponse,
+  KoboImportErrorApi,
   KoboImportItem,
   KoboImportResult,
   TokenResponse,
@@ -22,10 +23,16 @@ export { ApiError } from '@/lib/apiError';
 export * from '@/lib/validaciones';
 export type { AvisoCreado, AvisoPayload } from '@/types';
 
-// Mientras el backend no exponga los endpoints de atajaderos, avisos y
-// asistente, el frontend usa el servidor falso SIMULADO (lib/mockBackend.ts).
-// Pasar a false cuando estén disponibles y borrar mockBackend.ts.
-const USAR_DATOS_SIMULADOS = true;
+// Qué funciones usan todavía el servidor falso SIMULADO (lib/mockBackend.ts).
+// Inventario, inspecciones, avisos y Kobo ya están en el backend real (#2, #3).
+// El asistente (POST /api/asistente/resumir) es del módulo 03 (#4): mientras
+// responda 404 sigue simulado. Cuando todo esté en false, borrar mockBackend.ts.
+const SIMULADO = {
+  inventario: false,
+  avisos: false,
+  kobo: false,
+  asistente: true,
+};
 
 const TOKEN_STORAGE_KEY = 'atajaderos_jwt_token';
 
@@ -41,14 +48,22 @@ export function setStoredToken(token: string | null): void {
   }
 }
 
+// Pydantic antepone "Value error, " a los mensajes de validación: se quita
+// para que el usuario lea solo el motivo.
+function limpiarMensaje(m: string): string {
+  return m.replace(/^Value error,\s*/i, '');
+}
+
 // FastAPI devuelve `detail` como texto o como lista de errores de validación.
 function mensajeDeDetalle(detail: unknown): string | null {
-  if (typeof detail === 'string') return detail;
+  if (typeof detail === 'string') return limpiarMensaje(detail);
   if (Array.isArray(detail)) {
     const mensajes = detail
-      .map((d) => (d && typeof d === 'object' && 'msg' in d ? String(d.msg) : null))
+      .map((d) =>
+        d && typeof d === 'object' && 'msg' in d ? limpiarMensaje(String(d.msg)) : null,
+      )
       .filter(Boolean);
-    return mensajes.length ? mensajes.join(' · ') : null;
+    return mensajes.length ? mensajes.join(' ') : null;
   }
   return null;
 }
@@ -110,17 +125,17 @@ function aQueryString(filtros: FiltrosAtajaderos): string {
 export function fetchAtajaderos(
   filtros: FiltrosAtajaderos = {},
 ): Promise<AtajaderoListResponse> {
-  if (USAR_DATOS_SIMULADOS) return simulado.listar(filtros);
+  if (SIMULADO.inventario) return simulado.listar(filtros);
   return apiRequest<AtajaderoListResponse>(`/api/atajaderos${aQueryString(filtros)}`);
 }
 
 export function fetchAtajaderoDetalle(codigo: string): Promise<AtajaderoDetail> {
-  if (USAR_DATOS_SIMULADOS) return simulado.detalle(codigo);
+  if (SIMULADO.inventario) return simulado.detalle(codigo);
   return apiRequest<AtajaderoDetail>(`/api/atajaderos/${encodeURIComponent(codigo)}`);
 }
 
 export function crearAtajadero(payload: AtajaderoCreate): Promise<AtajaderoDetail> {
-  if (USAR_DATOS_SIMULADOS) return simulado.crearAtajadero(payload);
+  if (SIMULADO.inventario) return simulado.crearAtajadero(payload);
   return apiRequest<AtajaderoDetail>('/api/atajaderos', {
     method: 'POST',
     body: JSON.stringify(payload),
@@ -133,7 +148,7 @@ export function crearInspeccion(
   foto: File | null,
   responsable: string,
 ): Promise<InspeccionResponse> {
-  if (USAR_DATOS_SIMULADOS) return simulado.crearInspeccion(codigo, payload, foto, responsable);
+  if (SIMULADO.inventario) return simulado.crearInspeccion(codigo, payload, foto, responsable);
   // El responsable lo toma el backend del usuario autenticado (JWT).
   const form = new FormData();
   form.append('tipo_registro', payload.tipo_registro);
@@ -148,21 +163,32 @@ export function crearInspeccion(
   );
 }
 
-export function importarKobo(
+export async function importarKobo(
   registros: KoboImportItem[],
   responsable: string,
 ): Promise<KoboImportResult> {
-  if (USAR_DATOS_SIMULADOS) return simulado.importarKobo(registros, responsable);
-  return apiRequest<KoboImportResult>('/api/atajaderos/importar-kobo', {
-    method: 'POST',
-    body: JSON.stringify({ registros }),
-  });
+  if (SIMULADO.kobo) return simulado.importarKobo(registros, responsable);
+  // El backend devuelve cada error como objeto: la interfaz los recibe como texto.
+  const r = await apiRequest<Omit<KoboImportResult, 'errores'> & { errores: KoboImportErrorApi[] }>(
+    '/api/atajaderos/importar-kobo',
+    { method: 'POST', body: JSON.stringify({ registros }) },
+  );
+  return {
+    ...r,
+    errores: r.errores.map(
+      (e) =>
+        `Registro ${e.indice + 1}${e.codigo_unico ? ` (${e.codigo_unico})` : ''}: ${e.detalle
+          .split('; ')
+          .map((m) => m.replace(/^[a-z_]+: Value error,\s*/i, ''))
+          .join(' ')}`,
+    ),
+  };
 }
 
 // --- Copiloto IA (solo lectura respecto a la base de datos) ---
 
 export function consultarAsistente(req: AsistenteRequest): Promise<AsistenteResponse> {
-  if (USAR_DATOS_SIMULADOS) return simulado.asistente(req);
+  if (SIMULADO.asistente) return simulado.asistente(req);
   return apiRequest<AsistenteResponse>('/api/asistente/resumir', {
     method: 'POST',
     body: JSON.stringify(req),
@@ -184,7 +210,7 @@ export interface FeatureCollectionAtajaderos {
 export async function fetchAtajaderosGeojson(
   filtros: FiltrosAtajaderos = {},
 ): Promise<FeatureCollectionAtajaderos> {
-  if (USAR_DATOS_SIMULADOS) {
+  if (SIMULADO.inventario) {
     const { items } = await simulado.listar(filtros);
     return {
       type: 'FeatureCollection',
@@ -220,7 +246,7 @@ export function enviarAviso(
   payload: AvisoPayload,
   foto?: Blob | null,
 ): Promise<AvisoCreado> {
-  if (USAR_DATOS_SIMULADOS) return simulado.crearAviso(payload);
+  if (SIMULADO.avisos) return simulado.crearAviso(payload);
   const form = new FormData();
   Object.entries(payload).forEach(([clave, valor]) => {
     if (valor !== undefined && valor !== '') form.append(clave, String(valor));
