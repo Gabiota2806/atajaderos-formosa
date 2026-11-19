@@ -24,16 +24,17 @@ Guía operativa para que cada integrante del **Equipo 6** ejecute su agente en *
 
 ---
 
-## 2. Orden de Coordinación (¿Por qué 2 Olas Rápidas?)
+## 2. Orden de Coordinación en 3 Olas (Sin Bloqueos y con Presentación Real)
 
-- **4 de 5 roles arrancan YA en paralelo (minuto 0):**
+- **Ola 1 — Arrancan YA en paralelo (minuto 0):**
   - **Maximiliano** ejecuta primero **Prompt 1A (Issue `#1`: modelos + Alembic `0002`)** (~5–10 min), abre PR hacia `develop` y Gabriel la aprueba. Luego Maximiliano sigue con **Prompt 1B (`#2` y `#3`)**.
   - **Matías** arranca **ya mismo en paralelo** con **Prompt 2 (`#5` y `#6`)** (no necesita esperar al backend porque consume el contrato `00_CORE_CONTRACTS.md`).
-  - **Fabrizio y Gabriel** arrancan **ya mismo en paralelo** con **Prompt 4 (`#7`)**.
-- **Facundo (`#4`):**
-  - Su seed (`seed_demo.py`) y `resumir_triage_mesa` importan los modelos `Atajadero` e `Inspeccion` de `apps/backend/app/models/` creados en el Issue `#1`.
-  - Por eso, apenas `Issue #1` esté en `develop` (5–10 min después de arrancar Maximiliano), Facundo hace `git pull origin develop` y lanza **Prompt 3 (`#4`)** 100 % desatendido sin choques.
+- **Ola 2 — Apenas `Issue #1` esté fusionado en `develop` (~10 min después):**
+  - **Facundo (`#4`):** su seed (`seed_demo.py`) y `resumir_triage_mesa` importan los modelos `Atajadero` e `Inspeccion` de `apps/backend/app/models/` creados en el Issue `#1`.
+  - Por eso, apenas `Issue #1` esté en `develop`, Facundo hace `git pull origin develop` y lanza **Prompt 3 (`#4`)** 100 % desatendido sin choques.
   - *(Alternativa sin esperar: mientras Maximiliano termina `#1`, Facundo puede avanzar con `riachosFormosaGeoJson.ts` y `hipotesis_satelital_gee.json`).*
+- **Ola 3 — AL FINAL (cuando `#1` a `#6` ya estén integrados y verificados en `develop`):**
+  - **Fabrizio y Gabriel** hacen `git pull origin develop`, levantan el sistema completo en Docker y lanzan **Prompt 4 (`#7`)** para tomar **capturas reales** de `http://localhost:5173` y redactar `ficha_tecnica.md`, `ficha_fuentes.md`, guion del video ≤ 120 s, speech de 3 min y diseño del póster alineados al 100 % con el sistema real terminado.
 
 ---
 
@@ -94,13 +95,15 @@ Prompt para `/goal`:
 ---
 
 ### 3.4. Fabrizio Facundo Ginéz & Antonio Gabriel Pineda — Documentación, Video, Speech y Póster (Issue `#7`)
+*(Ejecutar en Ola 3 — al FINAL, cuando las PRs de `#1` a `#6` ya estén integradas en `develop` y levantadas en Docker).*
 ```bash
 git checkout -b docs/7-entrega-ficha-guion develop
 ```
 Prompt para `/goal`:
 > Modo desatendido por rol (SDD): eres el responsable exclusivo del módulo de Entrega Final (`04_entrega_speech_poster`).
-> Lee ÚNICAMENTE `docs/specs/00_CORE_CONTRACTS.md`, `docs/03_antecedentes_y_soluciones_comparadas.md`, `docs/specs/04_entrega_speech_poster/spec.md`, `docs/ficha_tecnica.md`, `docs/ficha_fuentes.md` y `README.md`. TIENES PROHIBIDO tocar archivos dentro de `apps/`.
-> Implementa el Issue #7: completa `docs/ficha_tecnica.md` (1 página), verifica consistencia de `docs/ficha_fuentes.md`, redacta `docs/guion_video_y_pitch.md` (guion segundo a segundo del video MP4 ≤ 120 s, speech de 3 minutos y estructura del póster del sábado 21/11 cubriendo los 100 pts de la rúbrica) y actualiza `README.md` y `docs/changelog.md`.
+> Lee ÚNICAMENTE `docs/specs/00_CORE_CONTRACTS.md`, `docs/03_antecedentes_y_soluciones_comparadas.md`, `docs/specs/04_entrega_speech_poster/spec.md`, `docs/specs/CHECKLIST_RESULTADO_FINAL.md`, `docs/ficha_tecnica.md`, `docs/ficha_fuentes.md` y `README.md`. TIENES PROHIBIDO tocar archivos dentro de `apps/`.
+> Con el sistema completo corriendo en `http://localhost:5173` y `http://localhost:8000/docs`, usa el navegador/Playwright para inspeccionar y tomar capturas reales de las pantallas terminadas (escritorio y móvil) y verificar el flujo E2E de `docs/specs/CHECKLIST_RESULTADO_FINAL.md`.
+> Implementa el Issue #7: completa `docs/ficha_tecnica.md` (1 página), verifica consistencia de `docs/ficha_fuentes.md`, redacta `docs/guion_video_y_pitch.md` (guion segundo a segundo del video MP4 ≤ 120 s basado en las pantallas reales, speech de 3 minutos y estructura del póster del sábado 21/11 con las capturas reales cubriendo los 100 pts de la rúbrica) y actualiza `README.md` y `docs/changelog.md`.
 > Haz commit (`docs(#7): ...`), push y abre PR hacia `develop` con `Closes #7` (PROHIBIDO auto-merge).
 
 ---
