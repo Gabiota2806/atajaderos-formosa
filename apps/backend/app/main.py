@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.api.helpers import UPLOADS_DIR
-from app.api.routes import atajaderos, auth, health, inspecciones
+from app.api.routes import asistente, atajaderos, auth, health, inspecciones
 from app.core.config import settings
 
 UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
@@ -31,3 +31,4 @@ app.include_router(health.router, prefix="/api")
 app.include_router(auth.router, prefix="/api")
 app.include_router(atajaderos.router, prefix="/api")
 app.include_router(inspecciones.router, prefix="/api")
+app.include_router(asistente.router, prefix="/api")
