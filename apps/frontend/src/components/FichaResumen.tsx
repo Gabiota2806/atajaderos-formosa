@@ -52,7 +52,7 @@ export default function FichaResumen({
   return (
     <section
       aria-label={`Resumen de ${a.codigo_unico}`}
-      className="rounded-xl border border-slate-200 bg-white p-4 shadow-lg"
+      className="entrada-suave panel-flotante rounded-2xl p-4"
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex flex-wrap items-center gap-1.5">
@@ -69,29 +69,29 @@ export default function FichaResumen({
         </button>
       </div>
 
-      <h2 className="mt-2 text-lg font-semibold text-slate-900">
+      <h2 className="titulo-ancho mt-2.5 text-lg font-extrabold leading-snug text-tinta">
         {a.nombre_referencia}
       </h2>
-      <p className="text-sm text-slate-600">
-        {a.cuenca_riacho} · Dpto. {a.departamento}
+      <p className="mt-0.5 text-sm text-slate-600">
+        <span className="rotulo-agua font-semibold">{a.cuenca_riacho}</span>, Dpto. {a.departamento}
       </p>
       <p className="mt-0.5 font-mono text-xs text-slate-500">
         {a.latitud.toFixed(4)}, {a.longitud.toFixed(4)}
       </p>
 
       <div
-        className={`mt-3 rounded-lg border px-3 py-2 ${CLASES_ESCURRIMIENTO[a.interrumpe_escurrimiento]}`}
+        className={`mt-3 rounded-xl border px-3 py-2.5 ${CLASES_ESCURRIMIENTO[a.interrumpe_escurrimiento]}`}
       >
         <p className="text-xs">¿Interrumpe el escurrimiento?</p>
-        <p className="text-base font-semibold">
+        <p className="titulo-ancho text-lg font-extrabold">
           {ETIQUETA_ESCURRIMIENTO[a.interrumpe_escurrimiento]}
         </p>
         <p className="text-xs">{fuente}</p>
       </div>
 
-      <div className="mt-2 rounded-lg border border-slate-200 px-3 py-2">
+      <div className="mt-2 rounded-xl border border-tinta/10 bg-white/60 px-3 py-2.5">
         <p className="text-xs text-slate-500">Estado</p>
-        <p className="text-base font-semibold text-slate-900">
+        <p className="titulo-ancho text-lg font-extrabold text-tinta">
           {ETIQUETA_ESTADO[a.estado]}
         </p>
         <p className="text-xs leading-snug text-slate-600">
@@ -134,7 +134,7 @@ export default function FichaResumen({
         <button
           type="button"
           onClick={() => onVerFicha(a.codigo_unico)}
-          className="mt-4 min-h-[44px] w-full rounded-lg bg-teal-700 px-4 text-sm font-semibold text-white hover:bg-teal-800"
+          className="presionable mt-4 min-h-[46px] w-full rounded-xl bg-teal-700 px-4 text-sm font-semibold text-white shadow-sm shadow-teal-900/20 hover:bg-teal-800"
         >
           Ver ficha e historial
         </button>

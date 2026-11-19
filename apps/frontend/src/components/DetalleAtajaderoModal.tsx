@@ -199,12 +199,13 @@ export default function DetalleAtajaderoModal({
             <CodigoAtajadero codigo={codigo} grande />
             {detalle && <EtiquetaCategoria categoria={detalle.categoria_dato} />}
           </div>
-          <h2 className="mt-1 text-lg font-semibold text-slate-900">
+          <h2 className="titulo-ancho mt-1.5 text-xl font-extrabold text-tinta">
             {detalle?.nombre_referencia ?? 'Cargando ficha…'}
           </h2>
           {detalle && (
             <p className="text-sm text-slate-600">
-              {detalle.cuenca_riacho} · Dpto. {detalle.departamento} ·{' '}
+              <span className="rotulo-agua font-semibold">{detalle.cuenca_riacho}</span>, Dpto.{' '}
+              {detalle.departamento}.{' '}
               <button
                 type="button"
                 onClick={() => void copiarCoordenadas()}

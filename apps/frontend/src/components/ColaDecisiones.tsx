@@ -48,10 +48,10 @@ export default function ColaDecisiones({
               type="button"
               onClick={() => onSeleccionar(a.codigo_unico)}
               aria-current={activo}
-              className={`flex w-full gap-3 rounded-lg border p-3 text-left transition-colors ${
+              className={`presionable elevable flex w-full gap-3 rounded-xl border p-3 text-left ${
                 activo
-                  ? 'border-teal-600 bg-teal-50/60'
-                  : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
+                  ? 'border-teal-600 bg-teal-50/80 ring-1 ring-teal-600/20'
+                  : 'border-tinta/10 bg-white hover:border-tinta/20'
               }`}
             >
               <span

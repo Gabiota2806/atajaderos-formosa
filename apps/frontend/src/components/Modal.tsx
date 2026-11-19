@@ -43,7 +43,7 @@ export default function Modal({
 
   return (
     <div
-      className="fixed inset-0 z-[2000] flex items-stretch justify-center bg-slate-900/50 sm:items-center sm:p-4"
+      className="modal-fondo fixed inset-0 z-[2000] flex items-stretch justify-center bg-tinta/55 backdrop-blur-[2px] sm:items-center sm:p-4"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onCerrar();
       }}
@@ -54,7 +54,7 @@ export default function Modal({
         aria-modal="true"
         aria-labelledby={idTitulo}
         tabIndex={-1}
-        className={`flex h-full w-full flex-col bg-white outline-none sm:h-auto sm:max-h-[92vh] sm:rounded-xl sm:shadow-2xl ${ANCHOS[ancho]}`}
+        className={`modal-panel flex h-full w-full flex-col bg-white outline-none sm:h-auto sm:max-h-[92vh] sm:rounded-2xl sm:shadow-2xl sm:shadow-tinta/30 ${ANCHOS[ancho]}`}
       >
         {/* En móvil el modal tapa toda la pantalla: la leyenda obligatoria va adentro. */}
         <p className="flex items-center justify-center gap-1.5 border-b border-amber-300 bg-amber-50 px-3 py-1.5 text-center text-[11px] font-semibold text-amber-950 sm:hidden">
