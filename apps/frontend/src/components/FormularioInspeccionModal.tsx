@@ -72,7 +72,7 @@ function Opcion({
       type="button"
       onClick={onClick}
       aria-pressed={activa}
-      className={`flex min-h-[56px] w-full items-start gap-3 rounded-xl border p-3.5 text-left transition-colors ${
+      className={`presionable flex min-h-[56px] w-full items-start gap-3 rounded-xl border p-3.5 text-left ${
         activa
           ? 'border-2 border-teal-700 bg-teal-50 text-teal-950'
           : 'border-slate-300 bg-white text-slate-900 hover:bg-slate-50'

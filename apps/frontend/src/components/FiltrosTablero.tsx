@@ -75,7 +75,7 @@ export default function FiltrosTablero({
                 type="button"
                 aria-pressed={activo}
                 onClick={() => alternarEscurrimiento(opcion)}
-                className={`inline-flex min-h-[36px] items-center gap-1.5 rounded-full border px-3 text-sm transition-colors ${
+                className={`presionable inline-flex min-h-[36px] items-center gap-1.5 rounded-full border px-3 text-sm font-medium ${
                   activo
                     ? 'border-teal-600 bg-teal-50 text-teal-900'
                     : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-50'
