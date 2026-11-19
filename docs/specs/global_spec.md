@@ -38,11 +38,14 @@
 
 ---
 
-## 3. Registro de Módulos del Sistema
+## 3. Registro de Módulos del Sistema (SDD con Aislamiento de Contexto)
 
-| Módulo | Directorio de la Spec | Estado | Responsable sugerido |
+> **Regla Anti-Agotamiento de Tokens:** Cada agente o desarrollador lee únicamente `docs/specs/00_CORE_CONTRACTS.md` y la spec de su módulo asignado.
+
+| Módulo | Archivo de Especificación | Estado | Responsable (Equipo 6) |
 | :--- | :--- | :--- | :--- |
-| `atajaderos` (Inventario y Mapa) | `docs/specs/atajaderos/spec.md` | *Pendiente* | Maximiliano González / Matías Núñez |
-| `inspecciones` (Historial, Evidencia y Campo/Kobo) | `docs/specs/inspecciones/spec.md` | *Pendiente* | Maximiliano González / Matías Núñez |
-| `geoai_asistente` (Capas IGN/Sentinel + IA HITL) | `docs/specs/geoai_asistente/spec.md` | *Pendiente* | Facundo Leiva |
-| `qa_entrega` (Tests, Documentación y Defensa) | `docs/specs/qa_entrega/spec.md` | *En progreso* | Gabriel Pineda / Fabrizio Ginéz |
+| `00_CORE_CONTRACTS` (Contratos Base, Enums, Máquina de Estados y OpenAPI) | `docs/specs/00_CORE_CONTRACTS.md` | *Aprobado (Local)* | Antonio Gabriel Pineda |
+| `01_backend_atajaderos` (PostGIS, Modelos 1:N, CRUD, SHA-256 y Kobo) | `docs/specs/01_backend_atajaderos/spec.md` | *Borrador* | Enrique Maximiliano González |
+| `02_frontend_react_bun` (React/Bun, Mapa Leaflet Real y Modales UI) | `docs/specs/02_frontend_react_bun/spec.md` | *Borrador* | Matías Daniel Núñez |
+| `03_geoai_apis_datos` (Copiloto IA HITL, Seed Formosa y Trazas SIG) | `docs/specs/03_geoai_apis_datos/spec.md` | *Borrador* | Facundo Joaquín Leiva |
+| `04_entrega_speech_poster` (Fichas, Video 120 s, Speech 3 min y Póster) | `docs/specs/04_entrega_speech_poster/spec.md` | *En progreso* | Fabrizio Facundo Ginéz / Antonio Gabriel Pineda |
