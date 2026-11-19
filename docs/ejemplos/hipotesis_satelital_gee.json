@@ -1,0 +1,18 @@
+{
+  "_nota": "PLANTILLA SIMULADO / DATO DE PRUEBA. No es un dato observado ni una detección real. Las coordenadas son ilustrativas. Un especialista externo (UPCA / INTA / CONAE con scripts en Google Earth Engine, Sentinel-2 o SAR) debe reemplazar los valores por su hipótesis verificada antes de importar. La importación siempre deja el registro en estado sin_validar con interrumpe_escurrimiento a_verificar.",
+  "registros": [
+    {
+      "nombre_referencia": "Hipótesis satelital · retención sobre riacho (ilustrativa)",
+      "latitud": -25.0,
+      "longitud": -58.8,
+      "departamento": "Pilagás",
+      "cuenca_riacho": "Riacho El Porteño",
+      "tipo_emplazamiento": "a_determinar",
+      "estado": "sin_validar",
+      "interrumpe_escurrimiento": "a_verificar",
+      "categoria_dato": "SIMULADO",
+      "fuente_referencia": "Plantilla de hipótesis satelital (SIMULADO / DATO DE PRUEBA)",
+      "reportado_por": "Plantilla de ejemplo"
+    }
+  ]
+}
