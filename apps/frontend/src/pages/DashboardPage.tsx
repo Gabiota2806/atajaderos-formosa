@@ -1,5 +1,10 @@
 import ColaDecisiones from '@/components/ColaDecisiones';
+import CopilotoIaPanel from '@/components/CopilotoIaPanel';
+import DetalleAtajaderoModal from '@/components/DetalleAtajaderoModal';
 import FichaResumen from '@/components/FichaResumen';
+import FormularioAtajaderoModal from '@/components/FormularioAtajaderoModal';
+import FormularioInspeccionModal from '@/components/FormularioInspeccionModal';
+import ImportarKoboModal from '@/components/ImportarKoboModal';
 import FiltrosTablero, {
   FILTROS_INICIALES,
   FiltrosTableroValor,
@@ -17,13 +22,23 @@ import {
   ArrowDownTrayIcon,
   ArrowPathIcon,
   ArrowRightOnRectangleIcon,
+  ArrowUpTrayIcon,
   MapIcon,
   MapPinIcon,
+  PlusIcon,
   TableCellsIcon,
 } from '@heroicons/react/24/outline';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 type Vista = 'mapa' | 'tabla';
+
+// Un único modal abierto por vez: nunca se apilan.
+type ModalAbierto =
+  | { tipo: 'detalle'; codigo: string }
+  | { tipo: 'inspeccion'; atajadero: AtajaderoSummary }
+  | { tipo: 'alta' }
+  | { tipo: 'kobo' }
+  | null;
 
 // Trazas REFERENCIA de los 4 corredores: las provee Facundo (módulo 03) en
 // src/data/riachosFormosaGeoJson.ts. No se importa todavía porque el archivo
@@ -57,6 +72,9 @@ export default function DashboardPage() {
   const [filtros, setFiltros] = useState<FiltrosTableroValor>(FILTROS_INICIALES);
   const [seleccionado, setSeleccionado] = useState<string | null>(null);
   const [vista, setVista] = useState<Vista>('mapa');
+  const [modal, setModal] = useState<ModalAbierto>(null);
+  const [versionDetalle, setVersionDetalle] = useState(0);
+  const responsable = user?.name ?? 'Usuario autenticado';
 
   const cargar = useCallback(() => {
     setCargando(true);
@@ -89,6 +107,57 @@ export default function DashboardPage() {
     setVista('mapa');
   };
 
+  const verFicha = (codigo: string) => {
+    setSeleccionado(codigo);
+    setModal({ tipo: 'detalle', codigo });
+  };
+
+  const modales = (() => {
+    if (!modal) return null;
+    switch (modal.tipo) {
+      case 'detalle':
+        return (
+          <DetalleAtajaderoModal
+            codigo={modal.codigo}
+            version={versionDetalle}
+            onCerrar={() => setModal(null)}
+            onNuevaInspeccion={(a) => setModal({ tipo: 'inspeccion', atajadero: a })}
+          />
+        );
+      case 'inspeccion':
+        return (
+          <FormularioInspeccionModal
+            atajadero={modal.atajadero}
+            responsable={responsable}
+            onCerrar={() => setModal({ tipo: 'detalle', codigo: modal.atajadero.codigo_unico })}
+            onGuardado={() => {
+              setVersionDetalle((v) => v + 1);
+              cargar();
+              setModal({ tipo: 'detalle', codigo: modal.atajadero.codigo_unico });
+            }}
+          />
+        );
+      case 'alta':
+        return (
+          <FormularioAtajaderoModal
+            onCerrar={() => setModal(null)}
+            onCreado={(a) => {
+              cargar();
+              verFicha(a.codigo_unico);
+            }}
+          />
+        );
+      case 'kobo':
+        return (
+          <ImportarKoboModal
+            responsable={responsable}
+            onCerrar={() => setModal(null)}
+            onImportado={cargar}
+          />
+        );
+    }
+  })();
+
   const botonVista = (valor: Vista, etiqueta: string, Icono: typeof MapIcon) => (
     <button
       type="button"
@@ -108,6 +177,7 @@ export default function DashboardPage() {
   const panelTriage = (
     <>
       <ResumenKpis atajaderos={atajaderos} />
+      <CopilotoIaPanel modo="resumir_triage_mesa" />
       <FiltrosTablero valor={filtros} onCambiar={setFiltros} cuencas={cuencas} />
       <div>
         <div className="mb-2 flex items-center justify-between">
@@ -143,6 +213,23 @@ export default function DashboardPage() {
               {botonVista('mapa', 'Mapa', MapIcon)}
               {botonVista('tabla', 'Tabla', TableCellsIcon)}
             </div>
+            <button
+              type="button"
+              onClick={() => setModal({ tipo: 'alta' })}
+              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg bg-teal-700 px-3 text-sm font-semibold text-white hover:bg-teal-800"
+            >
+              <PlusIcon className="h-4 w-4" aria-hidden="true" />
+              Nuevo atajadero
+            </button>
+            <button
+              type="button"
+              onClick={() => setModal({ tipo: 'kobo' })}
+              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              title="Importar relevamiento KoboToolbox / QField"
+            >
+              <ArrowUpTrayIcon className="h-4 w-4" aria-hidden="true" />
+              Kobo
+            </button>
             <button
               type="button"
               onClick={() => void descargarGeojson()}
@@ -205,6 +292,7 @@ export default function DashboardPage() {
               atajaderos={filtrados}
               seleccionado={seleccionado}
               onSeleccionar={setSeleccionado}
+              onVerFicha={verFicha}
               riachosGeoJson={RIACHOS}
               className="absolute inset-0"
             />
@@ -217,7 +305,11 @@ export default function DashboardPage() {
 
           {actual && (
             <div className="px-4 pt-4 lg:absolute lg:right-4 lg:top-16 lg:z-10 lg:max-h-[calc(100%-9rem)] lg:w-[340px] lg:overflow-y-auto lg:p-0">
-              <FichaResumen atajadero={actual} onCerrar={() => setSeleccionado(null)} />
+              <FichaResumen
+                atajadero={actual}
+                onCerrar={() => setSeleccionado(null)}
+                onVerFicha={verFicha}
+              />
             </div>
           )}
 
@@ -229,6 +321,8 @@ export default function DashboardPage() {
           </aside>
         </main>
       )}
+
+      {modales}
     </div>
   );
 }

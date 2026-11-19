@@ -61,21 +61,7 @@ export function encolarAviso(
   return aviso;
 }
 
-// Achica la foto antes de guardarla: localStorage ronda los 5 MB por sitio.
-export async function fotoADataUrl(
-  archivo: File,
-  ladoMaximo = 1280,
-  calidad = 0.7,
-): Promise<string> {
-  const bitmap = await createImageBitmap(archivo);
-  const escala = Math.min(1, ladoMaximo / Math.max(bitmap.width, bitmap.height));
-  const canvas = document.createElement('canvas');
-  canvas.width = Math.round(bitmap.width * escala);
-  canvas.height = Math.round(bitmap.height * escala);
-  canvas.getContext('2d')?.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-  bitmap.close();
-  return canvas.toDataURL('image/jpeg', calidad);
-}
+export { fotoADataUrl } from '@/lib/imagenes';
 
 async function dataUrlABlob(dataUrl: string): Promise<Blob> {
   return (await fetch(dataUrl)).blob();

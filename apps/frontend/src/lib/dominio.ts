@@ -1,8 +1,10 @@
 import {
   AtajaderoSummary,
   EstadoAtajadero,
+  IndicadorVisual,
   InterrupcionEscurrimiento,
   TipoEmplazamiento,
+  TipoRegistro,
 } from '@/types';
 
 // Textos de interfaz y criterios escritos (00_CORE_CONTRACTS.md §2).
@@ -36,6 +38,82 @@ export const ETIQUETA_EMPLAZAMIENTO: Record<TipoEmplazamiento, string> = {
   alcantarilla_vial: 'Alcantarilla vial',
   a_determinar: 'A determinar',
 };
+
+export const DEPARTAMENTOS_FORMOSA = [
+  'Bermejo',
+  'Formosa',
+  'Laishí',
+  'Matacos',
+  'Patiño',
+  'Pilagás',
+  'Pilcomayo',
+  'Pirané',
+  'Ramón Lista',
+];
+
+// Encuadre normativo por emplazamiento (00_CORE_CONTRACTS.md §2, TipoEmplazamiento).
+export const ENCUADRE_EMPLAZAMIENTO: Record<TipoEmplazamiento, string> = {
+  en_cauce_activo: 'Ley N° 1.314, Art. 40°: prohibición de obras sobre corrientes activas.',
+  lateral_fuera_de_cauce: 'Ley N° 1.246, Art. 88°: Registro de Atajaderos laterales.',
+  alcantarilla_vial: 'Obra vial: corresponde dar aviso a Vialidad (DPV).',
+  a_determinar: 'Emplazamiento a determinar en la inspección presencial.',
+};
+
+export const ETIQUETA_TIPO_REGISTRO: Record<TipoRegistro, string> = {
+  inspeccion: 'Inspección',
+  intervencion: 'Intervención',
+};
+
+export const DESCRIPCION_TIPO_REGISTRO: Record<TipoRegistro, string> = {
+  inspeccion: 'Relevamiento técnico presencial del estado de la obra.',
+  intervencion:
+    'Intimación formal, apertura de aliviadero, limpieza o remoción mecánica.',
+};
+
+// Una inspección asigna un estado técnico validado; nunca vuelve a sin_validar
+// (00_CORE_CONTRACTS.md §3: esa transición da 422).
+export const ESTADOS_INSPECCION: EstadoAtajadero[] = [
+  'operativo',
+  'con_deterioro',
+  'fuera_de_servicio',
+];
+
+// Protocolo FAO Paper 64 / ASDSO / FHWA: patologías visibles a simple vista.
+export const INDICADORES_VISUALES: {
+  valor: IndicadorVisual;
+  etiqueta: string;
+  descripcion: string;
+}[] = [
+  {
+    valor: 'cierre_total_sin_vertedero',
+    etiqueta: 'Cierre total sin vertedero',
+    descripcion: 'El terraplén cruza todo el cauce y no tiene paso para el agua.',
+  },
+  {
+    valor: 'riesgo_sobrepaso_borde_libre',
+    etiqueta: 'Riesgo de sobrepaso',
+    descripcion: 'El agua está cerca del coronamiento (poco borde libre).',
+  },
+  {
+    valor: 'filtracion_turbia_tubificacion',
+    etiqueta: 'Filtración turbia',
+    descripcion: 'Sale agua con barro aguas abajo: posible tubificación.',
+  },
+  {
+    valor: 'grietas_o_bioperturbacion',
+    etiqueta: 'Grietas o cuevas',
+    descripcion: 'Fisuras, hundimientos o cuevas de animales en el terraplén.',
+  },
+  {
+    valor: 'alcantarilla_obstruida',
+    etiqueta: 'Alcantarilla obstruida',
+    descripcion: 'La alcantarilla o el caño de paso está tapado.',
+  },
+];
+
+export const ETIQUETA_INDICADOR = Object.fromEntries(
+  INDICADORES_VISUALES.map((i) => [i.valor, i.etiqueta]),
+) as Record<IndicadorVisual, string>;
 
 // Clases Tailwind por valor de escurrimiento (tinte + texto oscuro de la misma familia).
 export const CLASES_ESCURRIMIENTO: Record<InterrupcionEscurrimiento, string> = {

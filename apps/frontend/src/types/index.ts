@@ -89,6 +89,87 @@ export interface AtajaderoListResponse {
   items: AtajaderoSummary[];
 }
 
+// POST /api/avisos (público, Forma B)
+export interface AvisoPayload {
+  nombre_referencia: string;
+  latitud: number;
+  longitud: number;
+  departamento: string;
+  cuenca_riacho: string;
+  descripcion_aviso: string;
+  reportado_por?: string;
+}
+
+export interface AvisoCreado {
+  codigo_unico: string;
+}
+
+// POST /api/atajaderos
+export interface AtajaderoCreate {
+  nombre_referencia: string;
+  latitud: number;
+  longitud: number;
+  departamento: string;
+  cuenca_riacho: string;
+  tipo_emplazamiento: TipoEmplazamiento;
+  categoria_dato: CategoriaDato;
+  estado?: EstadoAtajadero;
+  interrumpe_escurrimiento?: InterrupcionEscurrimiento;
+  codigo_unico?: string;
+  criterio_validado_por?: string;
+}
+
+// POST /api/atajaderos/{codigo_unico}/inspecciones
+export interface InspeccionCreate {
+  tipo_registro: TipoRegistro;
+  estado_observado: EstadoAtajadero;
+  interrumpe_escurrimiento: InterrupcionEscurrimiento;
+  indicadores_visuales: IndicadorVisual[];
+  observaciones: string;
+}
+
+// POST /api/atajaderos/importar-kobo
+export interface KoboImportItem {
+  nombre_referencia: string;
+  latitud: number;
+  longitud: number;
+  departamento?: string;
+  cuenca_riacho?: string;
+  tipo_emplazamiento?: TipoEmplazamiento;
+  codigo_unico?: string;
+  // Si trae codigo_unico existente + estado + observaciones, se agrega como inspección.
+  estado_observado?: EstadoAtajadero;
+  interrumpe_escurrimiento?: InterrupcionEscurrimiento;
+  indicadores_visuales?: IndicadorVisual[];
+  observaciones?: string;
+}
+
+export interface KoboImportResult {
+  creados: number;
+  inspecciones_agregadas: number;
+  errores: string[];
+}
+
+// POST /api/asistente/resumir (solo lectura respecto a la base de datos)
+export type ModoAsistente = 'estructurar_nota_campo' | 'resumir_triage_mesa';
+
+export interface AsistenteRequest {
+  modo: ModoAsistente;
+  texto_campo?: string;
+  codigo_unico?: string;
+}
+
+export interface AsistenteResponse {
+  modo_ejecucion: 'ia_asistida' | 'deterministico_offline';
+  requiere_confirmacion_humana: true;
+  aviso_legal: string;
+  resumen_tecnico: string;
+  indicadores_sugeridos: IndicadorVisual[];
+  estado_sugerido?: EstadoAtajadero | null;
+  escurrimiento_sugerido?: InterrupcionEscurrimiento | null;
+  encuadre_normativo: string[];
+}
+
 export interface FiltrosAtajaderos {
   estado?: EstadoAtajadero;
   interrumpe_escurrimiento?: InterrupcionEscurrimiento;
