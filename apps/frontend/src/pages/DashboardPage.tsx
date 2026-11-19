@@ -16,6 +16,7 @@ import TablaAtajaderos from '@/components/TablaAtajaderos';
 import { useAuth } from '@/context/AuthContext';
 import { descargarGeojson, fetchAtajaderos } from '@/lib/api';
 import { armarColaDecisiones } from '@/lib/dominio';
+import { RIACHOS_FORMOSA_GEOJSON } from '@/data/riachosFormosaGeoJson';
 import { AtajaderoSummary } from '@/types';
 import type { FeatureCollection } from 'geojson';
 import {
@@ -40,12 +41,8 @@ type ModalAbierto =
   | { tipo: 'kobo' }
   | null;
 
-// Trazas REFERENCIA de los 4 corredores: las provee Facundo (módulo 03) en
-// src/data/riachosFormosaGeoJson.ts. No se importa todavía porque el archivo
-// aún no existe en develop y rompería tsc. Al integrarlo, reemplazar por:
-//   import { RIACHOS_FORMOSA_GEOJSON } from '@/data/riachosFormosaGeoJson';
-//   const RIACHOS = RIACHOS_FORMOSA_GEOJSON;
-const RIACHOS: FeatureCollection | null = null;
+// Trazas REFERENCIA de los 4 corredores de Formosa (módulo 03).
+const RIACHOS: FeatureCollection | null = RIACHOS_FORMOSA_GEOJSON;
 
 function aplicarFiltros(
   atajaderos: AtajaderoSummary[],

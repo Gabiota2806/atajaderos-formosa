@@ -16,7 +16,7 @@ from app.enums.interrupcion_escurrimiento import InterrupcionEscurrimiento
 from app.enums.tipo_registro import TipoRegistro
 from app.models.atajadero import Atajadero
 from app.models.inspeccion import Inspeccion
-from app.seeds.seed_demo import seed_demo_users
+from app.seeds.seed_demo import seed_demo_atajaderos, seed_demo_users
 from app.services import asistente_ia
 
 NOTA_SPEC = "sin vertedero, agua a 10 cm de la cresta y alcantarilla tapada con ramas"
@@ -390,3 +390,24 @@ def test_plantilla_de_hipotesis_satelital_entra_por_importar_kobo_como_sin_valid
     assert creado.estado == EstadoAtajadero.SIN_VALIDAR.value
     assert creado.interrumpe_escurrimiento == InterrupcionEscurrimiento.A_VERIFICAR.value
     assert creado.categoria_dato == CategoriaDato.SIMULADO.value
+
+
+def test_seed_demo_atajaderos_es_idempotente_y_carga_10_simulados(
+    db_session: Session,
+) -> None:
+    primera = seed_demo_atajaderos(db_session)
+    segunda = seed_demo_atajaderos(db_session)
+
+    assert len(primera) == 10
+    assert len(segunda) == 10
+
+    todos = list(db_session.scalars(select(Atajadero).order_by(Atajadero.codigo_unico)).all())
+    assert len(todos) == 10
+    assert [a.codigo_unico for a in todos] == [f"ATJ-FSA-{n:04d}" for n in range(1, 11)]
+    for atajadero in todos:
+        assert atajadero.categoria_dato == CategoriaDato.SIMULADO.value
+        assert -27.0 <= atajadero.latitud <= -22.0
+        assert -62.5 <= atajadero.longitud <= -57.5
+
+    atj_0001 = todos[0]
+    assert len(atj_0001.inspecciones) == 3

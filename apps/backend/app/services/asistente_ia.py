@@ -214,11 +214,12 @@ def resumir_triage(db: Session, codigo_unico: str) -> AsistenteResponse:
         f"Resume solo la evolución del atajadero {codigo_unico} con estos datos: "
         f"{base.resumen_tecnico}"
     )
-    if salida is None or not isinstance(salida.get("resumen_tecnico"), str):
+    resumen_ia = salida.get("resumen_tecnico") if salida else None
+    if not isinstance(resumen_ia, str) or not resumen_ia.strip():
         return base
     return base.model_copy(
         update={
             "modo_ejecucion": "ia_asistida",
-            "resumen_tecnico": salida["resumen_tecnico"],
+            "resumen_tecnico": resumen_ia.strip(),
         }
     )
