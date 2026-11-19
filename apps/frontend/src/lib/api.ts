@@ -1,14 +1,30 @@
-import { ATAJADEROS_SIMULADOS } from '@/lib/mockAtajaderos';
+import { ApiError } from '@/lib/apiError';
+import * as simulado from '@/lib/mockBackend';
 import {
+  AsistenteRequest,
+  AsistenteResponse,
+  AtajaderoCreate,
+  AtajaderoDetail,
   AtajaderoListResponse,
+  AvisoCreado,
+  AvisoPayload,
   FiltrosAtajaderos,
   HealthResponse,
+  InspeccionCreate,
+  InspeccionResponse,
+  KoboImportItem,
+  KoboImportResult,
   TokenResponse,
   User,
 } from '@/types';
 
-// Mientras el backend no exponga GET /api/atajaderos, el frontend usa el
-// dataset SIMULADO local. Pasar a false cuando el endpoint esté disponible.
+export { ApiError } from '@/lib/apiError';
+export * from '@/lib/validaciones';
+export type { AvisoCreado, AvisoPayload } from '@/types';
+
+// Mientras el backend no exponga los endpoints de atajaderos, avisos y
+// asistente, el frontend usa el servidor falso SIMULADO (lib/mockBackend.ts).
+// Pasar a false cuando estén disponibles y borrar mockBackend.ts.
 const USAR_DATOS_SIMULADOS = true;
 
 const TOKEN_STORAGE_KEY = 'atajaderos_jwt_token';
@@ -22,17 +38,6 @@ export function setStoredToken(token: string | null): void {
     localStorage.setItem(TOKEN_STORAGE_KEY, token);
   } else {
     localStorage.removeItem(TOKEN_STORAGE_KEY);
-  }
-}
-
-// Error HTTP con código: permite distinguir validación (422) de fallas de red.
-export class ApiError extends Error {
-  constructor(
-    message: string,
-    public readonly status: number,
-  ) {
-    super(message);
-    this.name = 'ApiError';
   }
 }
 
@@ -100,37 +105,71 @@ function aQueryString(filtros: FiltrosAtajaderos): string {
   return qs ? `?${qs}` : '';
 }
 
-function filtrarSimulados(filtros: FiltrosAtajaderos): AtajaderoListResponse {
-  const texto = filtros.q?.trim().toLowerCase();
-  const items = ATAJADEROS_SIMULADOS.filter(
-    (a) =>
-      (!filtros.estado || a.estado === filtros.estado) &&
-      (!filtros.interrumpe_escurrimiento ||
-        a.interrumpe_escurrimiento === filtros.interrumpe_escurrimiento) &&
-      (!filtros.tipo_emplazamiento ||
-        a.tipo_emplazamiento === filtros.tipo_emplazamiento) &&
-      (!filtros.departamento || a.departamento === filtros.departamento) &&
-      (!filtros.cuenca_riacho || a.cuenca_riacho === filtros.cuenca_riacho) &&
-      (!texto ||
-        `${a.codigo_unico} ${a.nombre_referencia} ${a.cuenca_riacho}`
-          .toLowerCase()
-          .includes(texto)),
-  );
-  return { total: items.length, items };
-}
+// --- Inventario ---
 
-export async function fetchAtajaderos(
+export function fetchAtajaderos(
   filtros: FiltrosAtajaderos = {},
 ): Promise<AtajaderoListResponse> {
-  if (USAR_DATOS_SIMULADOS) {
-    // Pequeña demora para que los estados de carga se vean como con red real.
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    return filtrarSimulados(filtros);
-  }
-  return apiRequest<AtajaderoListResponse>(
-    `/api/atajaderos${aQueryString(filtros)}`,
+  if (USAR_DATOS_SIMULADOS) return simulado.listar(filtros);
+  return apiRequest<AtajaderoListResponse>(`/api/atajaderos${aQueryString(filtros)}`);
+}
+
+export function fetchAtajaderoDetalle(codigo: string): Promise<AtajaderoDetail> {
+  if (USAR_DATOS_SIMULADOS) return simulado.detalle(codigo);
+  return apiRequest<AtajaderoDetail>(`/api/atajaderos/${encodeURIComponent(codigo)}`);
+}
+
+export function crearAtajadero(payload: AtajaderoCreate): Promise<AtajaderoDetail> {
+  if (USAR_DATOS_SIMULADOS) return simulado.crearAtajadero(payload);
+  return apiRequest<AtajaderoDetail>('/api/atajaderos', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function crearInspeccion(
+  codigo: string,
+  payload: InspeccionCreate,
+  foto: File | null,
+  responsable: string,
+): Promise<InspeccionResponse> {
+  if (USAR_DATOS_SIMULADOS) return simulado.crearInspeccion(codigo, payload, foto, responsable);
+  // El responsable lo toma el backend del usuario autenticado (JWT).
+  const form = new FormData();
+  form.append('tipo_registro', payload.tipo_registro);
+  form.append('estado_observado', payload.estado_observado);
+  form.append('interrumpe_escurrimiento', payload.interrumpe_escurrimiento);
+  payload.indicadores_visuales.forEach((i) => form.append('indicadores_visuales', i));
+  form.append('observaciones', payload.observaciones);
+  if (foto) form.append('foto', foto, foto.name);
+  return apiRequest<InspeccionResponse>(
+    `/api/atajaderos/${encodeURIComponent(codigo)}/inspecciones`,
+    { method: 'POST', body: form },
   );
 }
+
+export function importarKobo(
+  registros: KoboImportItem[],
+  responsable: string,
+): Promise<KoboImportResult> {
+  if (USAR_DATOS_SIMULADOS) return simulado.importarKobo(registros, responsable);
+  return apiRequest<KoboImportResult>('/api/atajaderos/importar-kobo', {
+    method: 'POST',
+    body: JSON.stringify({ registros }),
+  });
+}
+
+// --- Copiloto IA (solo lectura respecto a la base de datos) ---
+
+export function consultarAsistente(req: AsistenteRequest): Promise<AsistenteResponse> {
+  if (USAR_DATOS_SIMULADOS) return simulado.asistente(req);
+  return apiRequest<AsistenteResponse>('/api/asistente/resumir', {
+    method: 'POST',
+    body: JSON.stringify(req),
+  });
+}
+
+// --- GeoJSON (QGIS / QField) ---
 
 export interface FeatureCollectionAtajaderos {
   type: 'FeatureCollection';
@@ -146,7 +185,7 @@ export async function fetchAtajaderosGeojson(
   filtros: FiltrosAtajaderos = {},
 ): Promise<FeatureCollectionAtajaderos> {
   if (USAR_DATOS_SIMULADOS) {
-    const { items } = filtrarSimulados(filtros);
+    const { items } = await simulado.listar(filtros);
     return {
       type: 'FeatureCollection',
       features: items.map(({ latitud, longitud, ...propiedades }) => ({
@@ -162,84 +201,6 @@ export async function fetchAtajaderosGeojson(
   );
 }
 
-// --- Avisos vecinales (POST /api/avisos, público, Forma B) ---
-
-export interface AvisoPayload {
-  nombre_referencia: string;
-  latitud: number;
-  longitud: number;
-  departamento: string;
-  cuenca_riacho: string;
-  descripcion_aviso: string;
-  reportado_por?: string;
-}
-
-export interface AvisoCreado {
-  codigo_unico: string;
-}
-
-// Mismas reglas que el backend (00_CORE_CONTRACTS.md §1.5 y §3): se validan
-// también acá para dar feedback inmediato, pero el backend sigue siendo la autoridad.
-export const LIMITES_FORMOSA = {
-  latMin: -27.0,
-  latMax: -22.0,
-  lonMin: -62.5,
-  lonMax: -57.5,
-};
-export const MIN_CARACTERES_DESCRIPCION = 10;
-
-export function validarAviso(p: AvisoPayload): Record<string, string> {
-  const errores: Record<string, string> = {};
-  const { latMin, latMax, lonMin, lonMax } = LIMITES_FORMOSA;
-  if (
-    !Number.isFinite(p.latitud) ||
-    !Number.isFinite(p.longitud) ||
-    p.latitud < latMin ||
-    p.latitud > latMax ||
-    p.longitud < lonMin ||
-    p.longitud > lonMax
-  ) {
-    errores.ubicacion =
-      'La ubicación tiene que estar dentro de la provincia de Formosa. Marcá el punto en el mapa o usá tu GPS.';
-  }
-  if (!p.nombre_referencia.trim()) {
-    errores.nombre_referencia = 'Contanos cómo se conoce el lugar (paraje, campo o ruta).';
-  }
-  if (!p.departamento) {
-    errores.departamento = 'Elegí el departamento.';
-  }
-  if (p.descripcion_aviso.trim().length < MIN_CARACTERES_DESCRIPCION) {
-    errores.descripcion_aviso = `Describí lo que ves con al menos ${MIN_CARACTERES_DESCRIPCION} caracteres.`;
-  }
-  return errores;
-}
-
-let contadorSimulado = 0;
-
-export async function enviarAviso(
-  payload: AvisoPayload,
-  foto?: Blob | null,
-): Promise<AvisoCreado> {
-  if (USAR_DATOS_SIMULADOS) {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    // Emula la red: sin conexión el fetch real fallaría con TypeError.
-    if (!navigator.onLine) throw new TypeError('Failed to fetch');
-    const errores = validarAviso(payload);
-    if (Object.keys(errores).length) {
-      throw new ApiError(Object.values(errores).join(' · '), 422);
-    }
-    contadorSimulado += 1;
-    return { codigo_unico: `ATJ-FSA-${String(100 + contadorSimulado).padStart(4, '0')}` };
-  }
-
-  const form = new FormData();
-  Object.entries(payload).forEach(([clave, valor]) => {
-    if (valor !== undefined && valor !== '') form.append(clave, String(valor));
-  });
-  if (foto) form.append('foto', foto, 'aviso.jpg');
-  return apiRequest<AvisoCreado>('/api/avisos', { method: 'POST', body: form });
-}
-
 export async function descargarGeojson(): Promise<void> {
   const coleccion = await fetchAtajaderosGeojson();
   const blob = new Blob([JSON.stringify(coleccion, null, 2)], {
@@ -251,4 +212,19 @@ export async function descargarGeojson(): Promise<void> {
   enlace.download = `atajaderos-formosa-${new Date().toISOString().slice(0, 10)}.geojson`;
   enlace.click();
   URL.revokeObjectURL(url);
+}
+
+// --- Avisos vecinales (POST /api/avisos, público, Forma B) ---
+
+export function enviarAviso(
+  payload: AvisoPayload,
+  foto?: Blob | null,
+): Promise<AvisoCreado> {
+  if (USAR_DATOS_SIMULADOS) return simulado.crearAviso(payload);
+  const form = new FormData();
+  Object.entries(payload).forEach(([clave, valor]) => {
+    if (valor !== undefined && valor !== '') form.append(clave, String(valor));
+  });
+  if (foto) form.append('foto', foto, 'aviso.jpg');
+  return apiRequest<AvisoCreado>('/api/avisos', { method: 'POST', body: form });
 }

@@ -1,4 +1,153 @@
-import { AtajaderoSummary } from '@/types';
+import { AtajaderoSummary, InspeccionResponse } from '@/types';
+
+type RegistroHistorico = Omit<
+  InspeccionResponse,
+  'id' | 'atajadero_codigo' | 'evidencia_fotos' | 'fotos_hashes_sha256'
+>;
+
+const RESPONSABLE_DEMO = 'Inspector de campo (DATO DE PRUEBA)';
+
+// SIMULADO: historial 1:N coherente con los resúmenes de abajo (la última
+// entrada coincide con el estado actual). Sin fotos ni hashes: no se inventan
+// evidencias; los hashes reales aparecen al cargar una foto en una inspección.
+const HISTORIAL: Record<string, RegistroHistorico[]> = {
+  'ATJ-FSA-0001': [
+    {
+      fecha_inspeccion: '2026-10-05T09:00:00',
+      responsable: RESPONSABLE_DEMO,
+      tipo_registro: 'inspeccion',
+      estado_observado: 'operativo',
+      interrumpe_escurrimiento: 'no',
+      indicadores_visuales: [],
+      observaciones: 'Terraplén íntegro con vertedero lateral funcionando.',
+    },
+    {
+      fecha_inspeccion: '2026-10-28T11:30:00',
+      responsable: RESPONSABLE_DEMO,
+      tipo_registro: 'inspeccion',
+      estado_observado: 'con_deterioro',
+      interrumpe_escurrimiento: 'a_verificar',
+      indicadores_visuales: ['grietas_o_bioperturbacion'],
+      observaciones: 'Erosión en el talud aguas abajo; vertedero parcialmente colmatado.',
+    },
+    {
+      fecha_inspeccion: '2026-11-14T10:30:00',
+      responsable: RESPONSABLE_DEMO,
+      tipo_registro: 'inspeccion',
+      estado_observado: 'con_deterioro',
+      interrumpe_escurrimiento: 'si',
+      indicadores_visuales: ['cierre_total_sin_vertedero', 'riesgo_sobrepaso_borde_libre'],
+      observaciones:
+        'Vertedero cerrado con tierra. El agua se acumula aguas arriba y no pasa al cauce.',
+    },
+  ],
+  'ATJ-FSA-0003': [
+    {
+      fecha_inspeccion: '2026-10-20T08:15:00',
+      responsable: RESPONSABLE_DEMO,
+      tipo_registro: 'inspeccion',
+      estado_observado: 'con_deterioro',
+      interrumpe_escurrimiento: 'no',
+      indicadores_visuales: ['alcantarilla_obstruida'],
+      observaciones: 'Alcantarilla de paso con ramas y sedimento, flujo reducido.',
+    },
+    {
+      fecha_inspeccion: '2026-11-10T09:00:00',
+      responsable: RESPONSABLE_DEMO,
+      tipo_registro: 'intervencion',
+      estado_observado: 'operativo',
+      interrumpe_escurrimiento: 'no',
+      indicadores_visuales: [],
+      observaciones: 'Limpieza mecánica de la alcantarilla. Paso del agua restablecido.',
+    },
+  ],
+  'ATJ-FSA-0004': [
+    {
+      fecha_inspeccion: '2026-10-30T14:00:00',
+      responsable: RESPONSABLE_DEMO,
+      tipo_registro: 'inspeccion',
+      estado_observado: 'con_deterioro',
+      interrumpe_escurrimiento: 'a_verificar',
+      indicadores_visuales: ['grietas_o_bioperturbacion'],
+      observaciones: 'Cuevas de animales en el coronamiento. Laguna en nivel alto.',
+    },
+    {
+      fecha_inspeccion: '2026-11-12T15:20:00',
+      responsable: RESPONSABLE_DEMO,
+      tipo_registro: 'inspeccion',
+      estado_observado: 'con_deterioro',
+      interrumpe_escurrimiento: 'si',
+      indicadores_visuales: ['riesgo_sobrepaso_borde_libre'],
+      observaciones: 'Borde libre crítico: el agua está a menos de 30 cm del coronamiento.',
+    },
+  ],
+  'ATJ-FSA-0005': [
+    {
+      fecha_inspeccion: '2026-10-30T11:00:00',
+      responsable: RESPONSABLE_DEMO,
+      tipo_registro: 'inspeccion',
+      estado_observado: 'fuera_de_servicio',
+      interrumpe_escurrimiento: 'si',
+      indicadores_visuales: ['alcantarilla_obstruida', 'cierre_total_sin_vertedero'],
+      observaciones: 'Alcantarilla vial colapsada bajo la RN 11; el agua no cruza la ruta.',
+    },
+  ],
+  'ATJ-FSA-0007': [
+    {
+      fecha_inspeccion: '2026-10-15T10:00:00',
+      responsable: RESPONSABLE_DEMO,
+      tipo_registro: 'inspeccion',
+      estado_observado: 'operativo',
+      interrumpe_escurrimiento: 'no',
+      indicadores_visuales: [],
+      observaciones: 'Atajadero lateral sin conexión con el cauce principal.',
+    },
+    {
+      fecha_inspeccion: '2026-11-08T08:45:00',
+      responsable: RESPONSABLE_DEMO,
+      tipo_registro: 'inspeccion',
+      estado_observado: 'operativo',
+      interrumpe_escurrimiento: 'no',
+      indicadores_visuales: [],
+      observaciones: 'Sin cambios respecto de la inspección anterior.',
+    },
+  ],
+  'ATJ-FSA-0008': [
+    {
+      fecha_inspeccion: '2026-11-11T13:10:00',
+      responsable: RESPONSABLE_DEMO,
+      tipo_registro: 'inspeccion',
+      estado_observado: 'con_deterioro',
+      interrumpe_escurrimiento: 'si',
+      indicadores_visuales: ['alcantarilla_obstruida', 'grietas_o_bioperturbacion'],
+      observaciones: 'Alcantarilla tapada en la boca del riacho; grietas en el terraplén.',
+    },
+  ],
+  'ATJ-FSA-0010': [
+    {
+      fecha_inspeccion: '2026-11-09T10:00:00',
+      responsable: RESPONSABLE_DEMO,
+      tipo_registro: 'inspeccion',
+      estado_observado: 'operativo',
+      interrumpe_escurrimiento: 'no',
+      indicadores_visuales: [],
+      observaciones: 'Obra lateral en buen estado, vertedero libre.',
+    },
+  ],
+};
+
+export function historialSimulado(): InspeccionResponse[] {
+  let id = 0;
+  return Object.entries(HISTORIAL).flatMap(([codigo, registros]) =>
+    registros.map((r) => ({
+      ...r,
+      id: ++id,
+      atajadero_codigo: codigo,
+      evidencia_fotos: [],
+      fotos_hashes_sha256: [],
+    })),
+  );
+}
 
 // SIMULADO / DATO DE PRUEBA.
 // Dataset temporal con la forma de GET /api/atajaderos (00_CORE_CONTRACTS.md §5)
