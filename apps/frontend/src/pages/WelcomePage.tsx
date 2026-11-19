@@ -5,6 +5,7 @@ import { HealthResponse } from '@/types';
 import {
   ArrowRightIcon,
   MapPinIcon,
+  MegaphoneIcon,
   ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
 import { useEffect, useState } from 'react';
@@ -32,7 +33,14 @@ export default function WelcomePage() {
               Atajaderos Formosa · Operación Agua
             </span>
           </div>
-          <nav className="flex items-center gap-3">
+          <nav className="flex flex-wrap items-center justify-end gap-2">
+            <Link
+              to="/reportar"
+              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-md border border-teal-700 px-4 py-2 text-sm font-semibold text-teal-800 hover:bg-teal-50"
+            >
+              <MegaphoneIcon className="h-4 w-4" aria-hidden="true" />
+              Avisar un bloqueo
+            </Link>
             <Link
               to={user ? '/dashboard' : '/login'}
               className="inline-flex items-center gap-1.5 rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800"

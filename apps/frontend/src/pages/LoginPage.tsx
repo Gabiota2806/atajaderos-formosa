@@ -147,6 +147,16 @@ export default function LoginPage() {
               </button>
             </div>
           </div>
+
+          <p className="mt-4 text-center text-sm text-slate-600">
+            ¿Viste un posible bloqueo y no tenés usuario?{' '}
+            <Link
+              to="/reportar"
+              className="font-semibold text-teal-800 underline underline-offset-2 hover:text-teal-900"
+            >
+              Avisá sin registrarte
+            </Link>
+          </p>
         </div>
       </div>
     </div>

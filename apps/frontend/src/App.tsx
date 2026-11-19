@@ -1,6 +1,7 @@
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import DashboardPage from '@/pages/DashboardPage';
 import LoginPage from '@/pages/LoginPage';
+import ReportarAvisoPage from '@/pages/ReportarAvisoPage';
 import WelcomePage from '@/pages/WelcomePage';
 import { PropsWithChildren } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
@@ -30,6 +31,8 @@ export default function App() {
         <Routes>
           <Route path="/" element={<WelcomePage />} />
           <Route path="/login" element={<LoginPage />} />
+          {/* Pública, sin login: aviso vecinal (Forma B). */}
+          <Route path="/reportar" element={<ReportarAvisoPage />} />
           <Route
             path="/dashboard"
             element={

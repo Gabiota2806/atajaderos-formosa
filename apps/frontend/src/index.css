@@ -1,1 +1,6 @@
 @import "tailwindcss";
+
+/* Mapa base neutro: solo el semáforo de los marcadores aporta color. */
+.capa-base-gris {
+  filter: grayscale(1) contrast(1.05) brightness(1.02);
+}
