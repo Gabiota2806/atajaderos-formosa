@@ -9,23 +9,23 @@ Documento de verificación integral para **Antonio Gabriel Pineda (QA / Integrad
 ## 1. Base de Datos y Persistencia (PostgreSQL 18 + PostGIS 3.7)
 
 Al ejecutar `alembic upgrade head` y `python -m app.seeds.seed_demo`:
-- [ ] Existen las tablas `users`, `atajaderos` e `inspecciones` con claves primarias `UUID v4`.
-- [ ] La tabla `atajaderos` posee `codigo_unico` único e inmutable (`ATJ-FSA-NNNN`), `tipo_emplazamiento`, `estado`, `interrumpe_escurrimiento`, `categoria_dato`, `fecha_ultima_inspeccion` y geometría espacial `geom geometry(Point, 4326)` compatible con QGIS/PostGIS.
-- [ ] Existen los **2 usuarios demo** (`inspector@atajaderos.ar` y `referente@atajaderos.ar`, clave `password`).
-- [ ] Existen exactamente **10 atajaderos `SIMULADO`** distribuidos en coordenadas reales de los **4 corredores críticos de Formosa** (*El Porteño–He-Hé*, *Monte Lindo/Laguna Gallo*, *Pilagá/Mojón de Fierro* y *Bañado La Estrella–Salado*), con su historial 1:N inicial (incluyendo registros `sin_validar`, lecturas rezagadas `> 14 días` y casos `interrumpe_escurrimiento = si`).
-- [ ] Ejecutar `seed_demo` dos veces seguidas es **100 % idempotente** (no duplica registros).
+- [x] Existen las tablas `users`, `atajaderos` e `inspecciones` con claves primarias `UUID v4` (en `atajaderos` e `inspecciones`) y `id` en `users`.
+- [x] La tabla `atajaderos` posee `codigo_unico` único e inmutable (`ATJ-FSA-NNNN`), `tipo_emplazamiento`, `estado`, `interrumpe_escurrimiento`, `categoria_dato`, `fecha_ultima_inspeccion` y geometría espacial `geom geometry(Point, 4326)` compatible con QGIS/PostGIS.
+- [x] Existen los **2 usuarios demo** (`inspector@atajaderos.ar` y `referente@atajaderos.ar`, clave `password`).
+- [x] Existen exactamente **10 atajaderos `SIMULADO`** distribuidos en coordenadas reales de los **4 corredores críticos de Formosa** (*El Porteño–He-Hé*, *Monte Lindo/Laguna Gallo*, *Pilagá/Mojón de Fierro* y *Bañado La Estrella–Salado*), con su historial 1:N inicial (incluyendo registros `sin_validar`, lecturas rezagadas `> 14 días` y casos `interrumpe_escurrimiento = si`).
+- [x] Ejecutar `seed_demo` dos veces seguidas es **100 % idempotente** (no duplica registros).
 
 ---
 
 ## 2. Backend FastAPI y Pruebas Automatizadas (`apps/backend/`)
 
 Al ejecutar `docker compose exec backend uv run --no-sync pytest`, `ruff check .` y `ruff format --check .`:
-- [ ] **100 % de los tests en verde** contra la base `atajaderos_test` y **0 errores de Ruff**.
-- [ ] **10 endpoints operativos en Swagger (`/docs`):**
-  1. `GET /api/health` (devuelve `es_prototipo: true` y estado del modo IA).
+- [x] **100 % de los tests en verde** (`37 passed`) contra la base `atajaderos_test` y **0 errores de Ruff**.
+- [x] **11 endpoints operativos en Swagger (`/docs`):**
+  1. `GET /api/health` (devuelve `es_prototipo: true` e `ia_modo`).
   2. `POST /api/auth/login` y `GET /api/auth/me` (JWT + Argon2).
   3. `POST /api/avisos` *(público — Forma B)*: crea aviso con foto opcional sellada `SHA-256`, forzado en backend a `sin_validar` + `a_verificar` + `a_determinar`.
-  4. `GET /api/atajaderos` (filtros combinados por estado, escurrimiento, emplazamiento, departamento, cuenca y búsqueda `q`).
+  4. `GET /api/atajaderos` (filtros combinados por estado, escurrimiento, emplazamiento, categoría, departamento, cuenca y búsqueda `q`).
   5. `GET /api/atajaderos/geojson` (`FeatureCollection` EPSG:4326 descargable y abrible directo en QGIS/QField).
   6. `POST /api/atajaderos` (autogenera `ATJ-FSA-NNNN`, valida coordenadas dentro de Formosa, rechaza `409` duplicados y `422` inválidos).
   7. `GET /api/atajaderos/{codigo_unico}` (ficha + historial 1:N ordenado descendentemente).
@@ -38,13 +38,13 @@ Al ejecutar `docker compose exec backend uv run --no-sync pytest`, `ruff check .
 ## 3. Frontend Web Responsive Mobile-First (`apps/frontend/`)
 
 Al ejecutar `docker compose exec frontend bun run build` (`tsc --noEmit && vite build`) y navegar en `http://localhost:5173` (tanto en escritorio `1280px+` como en móvil `390x844`):
-- [ ] **Cero errores de TypeScript/Vite, cero errores en consola JS y cero emojis de texto** (solo `@heroicons/react`).
-- [ ] **`<PrototypeBanner />` visible en todas las vistas** (`/`, `/login`, `/reportar`, `/dashboard`) con la leyenda oficial.
-- [ ] **100 % Responsive Mobile-First en todas las pantallas:** sin scroll horizontal en celular (`360px–640px`), tablet ni PC, y con `manifest.webmanifest` funcional.
-- [ ] **Mapa Leaflet real de Formosa:** centrado en la provincia, alternando capa base Vial/IGN (`REFERENCIA`) y Satelital (`OBSERVADO`), con las trazas GeoJSON de los 4 corredores de riachos (`REFERENCIA`) y marcadores con semáforo (`rojo = si`, `ámbar = a_verificar`, `verde = no`).
-- [ ] **Tablero de Triage:** 4 KPIs operativos, filtros funcionales, etiquetas visibles (`SIMULADO`, `OBSERVADO`, `REFERENCIA`), columna **Última Inspección** (mostrando `SIN LECTURA` o días de rezago) y botón de descarga GeoJSON para QGIS/QField.
-- [ ] **Ruta Pública `/reportar` (Aviso Vecinal Offline):** accesible sin login, con GPS móvil / clic en mapa, cámara trasera y **cola offline en `localStorage`** que guarda avisos sin internet y los envía automáticamente al recuperar conexión (`online`).
-- [ ] **Flujo de Inspección Completo:** Ficha maestra con `codigo_unico` inmutable, línea de tiempo 1:N *append-only* con fotos y hash `SHA-256`, formulario con criterios escritos desplegados, checklist de 5 patologías FAO/FHWA, manejo visual limpio de errores `HTTP 422`, importador Kobo/QField y **Copiloto IA con botón obligatorio de confirmación humana**.
+- [x] **Cero errores de TypeScript/Vite, cero errores en consola JS y cero emojis de texto** (solo `@heroicons/react`).
+- [x] **`<PrototypeBanner />` visible en todas las vistas** (`/`, `/login`, `/reportar`, `/dashboard`) con la leyenda oficial.
+- [x] **100 % Responsive Mobile-First en todas las pantallas:** sin scroll horizontal en celular (`360px–640px`), tablet ni PC, y con `manifest.webmanifest` funcional.
+- [x] **Mapa Leaflet real de Formosa:** centrado en la provincia, alternando capa base Vial/IGN (`REFERENCIA`) y Satelital Esri (`OBSERVADO / REFERENCIA`), con las 5 trazas GeoJSON de los 4 corredores de riachos (`REFERENCIA`) y marcadores con semáforo (`rojo = si`, `ámbar = a_verificar`, `verde = no`).
+- [x] **Tablero de Triage:** 4 KPIs operativos, filtros funcionales, etiquetas visibles (`SIMULADO`, `OBSERVADO`, `REFERENCIA`), columna **Última Inspección** (mostrando `SIN LECTURA` o días de rezago) y botón de descarga GeoJSON para QGIS/QField.
+- [x] **Ruta Pública `/reportar` (Aviso Vecinal Offline):** accesible sin login, con GPS móvil / clic en mapa, cámara trasera y **cola offline en `localStorage`** que guarda avisos sin internet y los envía automáticamente al recuperar conexión (`online`).
+- [x] **Flujo de Inspección Completo:** Ficha maestra con `codigo_unico` inmutable, línea de tiempo 1:N *append-only* con fotos y hash `SHA-256`, formulario con criterios escritos desplegados, checklist de 5 patologías FAO/FHWA, manejo visual limpio de errores `HTTP 422`, importador Kobo/QField y **Copiloto IA conectado al backend real con botón obligatorio de confirmación humana**.
 
 ---
 
@@ -63,11 +63,11 @@ Antes de ejecutar la **Ola 3 (`#7`)** y hacer el merge final hacia `main`, ejecu
 ## 5. Entregables Documentales y Audiovisuales (Ola 3 — Viernes 20/11 · 18:00 h y Sábado 21/11)
 
 Una vez verificados los puntos 1 a 4 con el sistema real funcionando:
-- [ ] Capturas reales tomadas de la aplicación definitiva (`http://localhost:5173`) en escritorio y móvil.
-- [ ] `README.md` actualizado y probado en clonado limpio.
-- [ ] `docs/ficha_tecnica.md` completa (1 página).
-- [ ] `docs/ficha_fuentes.md` completa con todas las fuentes (`OBSERVADO`, `REFERENCIA`, `SIMULADO`).
-- [ ] `docs/changelog.md` actualizado con todos los cambios integrados.
-- [ ] Video MP4 de demostración (≤ 120 segundos, pantalla real + voz + copia local de respaldo).
-- [ ] Póster impreso / digital (con capturas reales) y Speech de 3 minutos ensayado (`docs/guion_video_y_pitch.md`).
-- [ ] Commit final y tag evaluable en rama `main` antes del **viernes 20/11 a las 18:00 h**.
+- [ ] Capturas reales tomadas de la aplicación definitiva (`http://localhost:5173`) en escritorio y móvil *(Fabrizio Ginéz)*.
+- [x] `README.md` actualizado y probado en clonado limpio.
+- [x] `docs/ficha_tecnica.md` completa (1 página).
+- [x] `docs/ficha_fuentes.md` completa con todas las fuentes (`OBSERVADO`, `REFERENCIA`, `SIMULADO`).
+- [x] `docs/changelog.md` actualizado con todos los cambios integrados.
+- [ ] Video MP4 de demostración (≤ 120 segundos, pantalla real + voz + copia local de respaldo) *(Fabrizio Ginéz)*.
+- [ ] Póster impreso / digital (con capturas reales) y Speech de 3 minutos ensayado *(Fabrizio Ginéz)*.
+- [ ] Commit final y tag evaluable `v1.0.0` en rama `main` antes del **viernes 20/11 a las 18:00 h**.

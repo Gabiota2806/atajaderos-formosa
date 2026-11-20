@@ -6,7 +6,7 @@
 - **Backend (`apps/backend/`):** **Python 3.12** + **`uv`** (`pyproject.toml` + `uv.lock`) + **FastAPI** + **SQLAlchemy 2.0** + **Alembic** + **`psycopg`** (v3) + **Pydantic v2** + **PyJWT** + **`pwdlib[argon2]`** + **`pytest`/`httpx`** + **Ruff**.
 - **Frontend (`apps/frontend/`):** **Bun** (`package.json` + `bun.lock`) + **React 18** + **Vite 6** + **TypeScript (`.tsx`)** + **Tailwind CSS v4** (`@tailwindcss/vite`) + **React Router** + **Leaflet** (`@types/leaflet`) + **`@heroicons/react`** (SVGs vectoriales estrictos).
 - **Base de datos y almacenamiento:** **PostgreSQL 18 + PostGIS 3.7** (`postgis/postgis:18-3.7`, bases `atajaderos` y `atajaderos_test`) + volumen local `uploads_data` (`/app/uploads`, servido en `/uploads`).
-- **Componente IA / GeoAI:** Servicio proxy en FastAPI hacia **Gemini API** (`GEMINI_API_KEY`, `GEMINI_MODEL`) con **degradación determinística offline automática** si falta la API key o no hay conectividad; siempre exige confirmación humana (*Human-in-the-Loop*).
+- **Componente IA / GeoAI:** Servicio proxy en FastAPI hacia **Gemini API** (`GEMINI_API_KEY`, `GEMINI_MODEL=gemini-3.5-flash-lite`) con **degradación determinística offline automática** si falta la API key o no hay conectividad; siempre exige confirmación humana (*Human-in-the-Loop*).
 - **Puertos locales (Docker):**
   - Frontend (Vite + proxy `/api` y `/uploads` → `backend:8000`): `http://localhost:5173`
   - Backend FastAPI + Swagger OpenAPI: `http://localhost:8000` (`http://localhost:8000/docs`)
@@ -48,22 +48,22 @@
 | `observaciones` | `text` | Detalle de evidencia o intervención realizada ($\ge 10$ caracteres) |
 | `evidencia_fotos` / `fotos_hashes_sha256` | `array<string>` | Rutas bajo `/uploads/...` + sello criptográfico `SHA-256` (Decreto-Ley N° 971/1980) |
 
-## 3. Contrato REST Frontend ↔ Backend (FastAPI OpenAPI)
+## 3. Contrato REST Frontend ↔ Backend (11 Endpoints Implementados — FastAPI OpenAPI)
 
-### Endpoints implementados en la base
-- `GET /api/health` → Estado del servicio, `es_prototipo: true`, leyenda oficial y modo IA (`ia_asistida` | `deterministico_offline`).
+### Salud y autenticación
+- `GET /api/health` → Estado del servicio, `es_prototipo: true`, leyenda oficial y `ia_modo` (`ia_asistida` | `deterministico_offline`).
 - `POST /api/auth/login` → Autenticación JWT (`email`, `password` → `access_token`, `user`).
 - `GET /api/auth/me` → Perfil del usuario autenticado (`Authorization: Bearer <token>`).
 
-### Endpoints del dominio (Specs `00_CORE_CONTRACTS.md` y `01_`–`03_`)
-- `POST /api/avisos` *(público — Forma B)* → Aviso vecinal/ciudadano (con cola offline `localStorage` + auto-envío desde `/reportar`), forzado en backend a `estado="sin_validar"` e `interrumpe_escurrimiento="a_verificar"`.
-- `GET /api/atajaderos` → Lista filtrable de atajaderos (`estado`, `interrumpe_escurrimiento`, `tipo_emplazamiento`, `departamento`, `cuenca_riacho`, `q`) con `fecha_ultima_inspeccion`.
+### Inventario, inspecciones, avisos y Copiloto IA (conectados 100 % en frontend)
+- `POST /api/avisos` *(público — Forma B)* → Aviso vecinal/ciudadano (con cola offline `localStorage` + auto-envío desde `/reportar`), forzado en backend a `estado="sin_validar"`, `interrumpe_escurrimiento="a_verificar"`, `tipo_emplazamiento="a_determinar"` y `categoria_dato="SIMULADO"`.
+- `GET /api/atajaderos` → Lista filtrable de atajaderos (`estado`, `interrumpe_escurrimiento`, `tipo_emplazamiento`, `categoria_dato`, `departamento`, `cuenca_riacho`, `q`) con `fecha_ultima_inspeccion` y `total_inspecciones`.
 - `GET /api/atajaderos/geojson` → Exportación `FeatureCollection` GeoJSON EPSG:4326 compatible con QGIS / QField.
-- `POST /api/atajaderos` → Alta autenticada de atajadero (genera/valida `codigo_unico` inmutable, valida coordenadas de Formosa y `categoria_dato`).
+- `POST /api/atajaderos` → Alta autenticada de atajadero (autogenera/valida `codigo_unico` inmutable, valida coordenadas de Formosa y `categoria_dato`).
 - `GET /api/atajaderos/{codigo_unico}` → Detalle del atajadero + historial 1:N *append-only* de inspecciones/intervenciones.
-- `POST /api/atajaderos/{codigo_unico}/inspecciones` → Registra nueva inspección o intervención (`multipart/form-data` para adjunto de fotografía con hash `SHA-256` y checklist FAO/FHWA).
-- `POST /api/atajaderos/importar-kobo` → Importación por lotes de relevamientos de campo (KoboToolbox / QField) o hipótesis satelitales de scripts externos (GEE).
-- `POST /api/asistente/resumir` → Copiloto IA *Human-in-the-Loop* en modo solo lectura (`estructurar_nota_campo` y `resumir_triage_mesa`; Gemini proxy + fallback determinístico offline).
+- `POST /api/atajaderos/{codigo_unico}/inspecciones` → Registra nueva inspección o intervención (JSON o `multipart/form-data` para adjunto de fotografía con hash `SHA-256` y checklist FAO/ASDSO/FHWA).
+- `POST /api/atajaderos/importar-kobo` → Importación por lotes JSON o `FeatureCollection` GeoJSON (KoboToolbox / QField / hipótesis satelitales externas GEE).
+- `POST /api/asistente/resumir` → Copiloto IA *Human-in-the-Loop* en modo solo lectura (`estructurar_nota_campo` y `resumir_triage_mesa`; proxy Gemini `gemini-3.5-flash-lite` + fallback `deterministico_offline`).
 
 ### Reglas de Validación y Manejo de Errores (`07_Entrega_Tecnica_Software.pdf`)
 - **Validación estricta en backend (Pydantic v2):** Rechazar con `422` / `400` / `401` coordenadas fuera de rango, estados no permitidos, credenciales inválidas o campos obligatorios vacíos.

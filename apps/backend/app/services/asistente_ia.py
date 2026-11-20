@@ -39,9 +39,11 @@ SYSTEM_INSTRUCTION = (
     "Solo redactas borradores basados en el texto o los datos provistos. "
     "Nunca asignas estados definitivos ni afirmas infracciones. "
     "Responde únicamente con JSON válido con las claves: resumen_tecnico (string), "
-    "indicadores_sugeridos (lista de valores permitidos), "
-    "estado_sugerido (valor permitido o null), "
-    "escurrimiento_sugerido (valor permitido o null) y encuadre_normativo (lista de strings)."
+    "indicadores_sugeridos (lista con valores exactos entre: cierre_total_sin_vertedero, "
+    "riesgo_sobrepaso_borde_libre, filtracion_turbia_tubificacion, grietas_o_bioperturbacion, "
+    "alcantarilla_obstruida), estado_sugerido (null o uno de: operativo, con_deterioro, "
+    "fuera_de_servicio), escurrimiento_sugerido (null o uno de: si, no, a_verificar) "
+    "y encuadre_normativo (lista de strings)."
 )
 
 INDICADORES_PATRONES: list[tuple[IndicadorVisual, re.Pattern[str]]] = [

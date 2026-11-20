@@ -1,5 +1,4 @@
 import { ApiError } from '@/lib/apiError';
-import * as simulado from '@/lib/mockBackend';
 import {
   AsistenteRequest,
   AsistenteResponse,
@@ -22,17 +21,6 @@ import {
 export { ApiError } from '@/lib/apiError';
 export * from '@/lib/validaciones';
 export type { AvisoCreado, AvisoPayload } from '@/types';
-
-// Qué funciones usan todavía el servidor falso SIMULADO (lib/mockBackend.ts).
-// Inventario, inspecciones, avisos y Kobo ya están en el backend real (#2, #3).
-// El asistente (POST /api/asistente/resumir) es del módulo 03 (#4): mientras
-// responda 404 sigue simulado. Cuando todo esté en false, borrar mockBackend.ts.
-const SIMULADO = {
-  inventario: false,
-  avisos: false,
-  kobo: false,
-  asistente: true,
-};
 
 const TOKEN_STORAGE_KEY = 'atajaderos_jwt_token';
 
@@ -125,17 +113,14 @@ function aQueryString(filtros: FiltrosAtajaderos): string {
 export function fetchAtajaderos(
   filtros: FiltrosAtajaderos = {},
 ): Promise<AtajaderoListResponse> {
-  if (SIMULADO.inventario) return simulado.listar(filtros);
   return apiRequest<AtajaderoListResponse>(`/api/atajaderos${aQueryString(filtros)}`);
 }
 
 export function fetchAtajaderoDetalle(codigo: string): Promise<AtajaderoDetail> {
-  if (SIMULADO.inventario) return simulado.detalle(codigo);
   return apiRequest<AtajaderoDetail>(`/api/atajaderos/${encodeURIComponent(codigo)}`);
 }
 
 export function crearAtajadero(payload: AtajaderoCreate): Promise<AtajaderoDetail> {
-  if (SIMULADO.inventario) return simulado.crearAtajadero(payload);
   return apiRequest<AtajaderoDetail>('/api/atajaderos', {
     method: 'POST',
     body: JSON.stringify(payload),
@@ -146,9 +131,8 @@ export function crearInspeccion(
   codigo: string,
   payload: InspeccionCreate,
   foto: File | null,
-  responsable: string,
+  _responsable?: string,
 ): Promise<InspeccionResponse> {
-  if (SIMULADO.inventario) return simulado.crearInspeccion(codigo, payload, foto, responsable);
   // El responsable lo toma el backend del usuario autenticado (JWT).
   const form = new FormData();
   form.append('tipo_registro', payload.tipo_registro);
@@ -165,9 +149,8 @@ export function crearInspeccion(
 
 export async function importarKobo(
   registros: KoboImportItem[],
-  responsable: string,
+  _responsable?: string,
 ): Promise<KoboImportResult> {
-  if (SIMULADO.kobo) return simulado.importarKobo(registros, responsable);
   // El backend devuelve cada error como objeto: la interfaz los recibe como texto.
   const r = await apiRequest<Omit<KoboImportResult, 'errores'> & { errores: KoboImportErrorApi[] }>(
     '/api/atajaderos/importar-kobo',
@@ -188,7 +171,6 @@ export async function importarKobo(
 // --- Copiloto IA (solo lectura respecto a la base de datos) ---
 
 export function consultarAsistente(req: AsistenteRequest): Promise<AsistenteResponse> {
-  if (SIMULADO.asistente) return simulado.asistente(req);
   return apiRequest<AsistenteResponse>('/api/asistente/resumir', {
     method: 'POST',
     body: JSON.stringify(req),
@@ -210,18 +192,6 @@ export interface FeatureCollectionAtajaderos {
 export async function fetchAtajaderosGeojson(
   filtros: FiltrosAtajaderos = {},
 ): Promise<FeatureCollectionAtajaderos> {
-  if (SIMULADO.inventario) {
-    const { items } = await simulado.listar(filtros);
-    return {
-      type: 'FeatureCollection',
-      features: items.map(({ latitud, longitud, ...propiedades }) => ({
-        type: 'Feature',
-        // GeoJSON ordena [longitud, latitud], al revés que Leaflet.
-        geometry: { type: 'Point', coordinates: [longitud, latitud] },
-        properties: propiedades,
-      })),
-    };
-  }
   return apiRequest<FeatureCollectionAtajaderos>(
     `/api/atajaderos/geojson${aQueryString(filtros)}`,
   );
@@ -246,7 +216,6 @@ export function enviarAviso(
   payload: AvisoPayload,
   foto?: Blob | null,
 ): Promise<AvisoCreado> {
-  if (SIMULADO.avisos) return simulado.crearAviso(payload);
   const form = new FormData();
   Object.entries(payload).forEach(([clave, valor]) => {
     if (valor !== undefined && valor !== '') form.append(clave, String(valor));

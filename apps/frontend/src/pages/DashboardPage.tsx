@@ -195,10 +195,17 @@ export default function DashboardPage() {
     </button>
   );
 
+  const codigoTriage =
+    seleccionado ?? cola[0]?.atajadero.codigo_unico ?? atajaderos[0]?.codigo_unico;
+
   const panelTriage = (
     <>
       <ResumenKpis atajaderos={atajaderos} />
-      <CopilotoIaPanel modo="resumir_triage_mesa" />
+      <CopilotoIaPanel
+        key={codigoTriage ?? 'sin-codigo'}
+        modo="resumir_triage_mesa"
+        codigoUnico={codigoTriage}
+      />
       <FiltrosTablero valor={filtros} onCambiar={setFiltros} cuencas={cuencas} />
       <div>
         <div className="mb-2.5 flex items-center justify-between">

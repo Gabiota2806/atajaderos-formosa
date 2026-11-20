@@ -38,6 +38,7 @@ export default function CopilotoIaPanel({
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const esCampo = modo === 'estructurar_nota_campo';
+  const sinObjetivo = !esCampo && !codigoUnico;
 
   const consultar = async () => {
     setCargando(true);
@@ -69,19 +70,29 @@ export default function CopilotoIaPanel({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="flex items-center gap-1.5 text-sm font-medium text-slate-700">
           <SparklesIcon className="h-4 w-4" aria-hidden="true" />
-          {esCampo ? 'Ordenar notas con el copiloto' : 'Síntesis de triage con el copiloto'}
+          {esCampo
+            ? 'Ordenar notas con el copiloto'
+            : codigoUnico
+              ? `Síntesis de triage · ${codigoUnico}`
+              : 'Síntesis de triage con el copiloto'}
         </p>
         {!borrador && (
           <button
             type="button"
             onClick={() => void consultar()}
-            disabled={cargando}
+            disabled={cargando || sinObjetivo}
             className="presionable inline-flex min-h-[40px] items-center rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-tinta hover:border-slate-400 disabled:opacity-60"
           >
             {cargando ? 'Generando…' : 'Generar borrador'}
           </button>
         )}
       </div>
+
+      {sinObjetivo && (
+        <p className="mt-2 text-xs text-slate-500">
+          Seleccioná un atajadero en el mapa o la lista para sintetizar su historial.
+        </p>
+      )}
 
       {error && <p className="mt-2 text-sm text-red-700">{error}</p>}
 
