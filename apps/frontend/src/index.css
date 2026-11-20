@@ -202,21 +202,23 @@
   pointer-events: none;
 }
 
-/* Panel de triage plegable (escritorio). Al ocultarse, visibility pasa a
-   hidden recién al terminar el deslizamiento: así el Tab no cae en botones
-   invisibles. Al mostrarse, visibility vuelve de inmediato. */
+/* Panel de triage tipo cortina (escritorio): clip-path "come" el panel desde
+   abajo hacia arriba, como una persiana que se enrolla; el contenido no se
+   mueve. Al ocultarse, visibility pasa a hidden recién al terminar: así el Tab
+   no cae en botones invisibles. Al mostrarse, vuelve de inmediato. */
 @media (min-width: 1024px) {
   .panel-plegable {
+    clip-path: inset(0 0 0 0 round 16px);
     transition:
-      transform 260ms var(--ease-movimiento),
+      clip-path 320ms var(--ease-movimiento),
       visibility 0s linear 0s;
   }
   .panel-plegable[data-oculto="true"] {
-    transform: translateX(calc(-100% - 2rem));
+    clip-path: inset(0 0 100% 0 round 16px);
     visibility: hidden;
     transition:
-      transform 260ms var(--ease-movimiento),
-      visibility 0s linear 260ms;
+      clip-path 320ms var(--ease-movimiento),
+      visibility 0s linear 320ms;
   }
 }
 
@@ -337,6 +339,25 @@
 /* Teselas del IGN invertidas: mapa oscuro sin tocar la capa satelital. */
 .oscuro .capa-base-gris {
   filter: grayscale(1) invert(1) brightness(0.82) contrast(0.92);
+}
+
+/* Máscara fuera de Formosa: velo del color del fondo (sigue el modo oscuro).
+   CSS pisa el atributo fill que pone Leaflet. */
+.mascara-formosa {
+  fill: var(--color-papel);
+  fill-opacity: 0.86;
+}
+/* Contorno provincial: tinta en claro; en oscuro CSS pisa el atributo stroke. */
+.oscuro path.limite-formosa {
+  stroke: #cfe0de;
+}
+
+/* Tooltip del departamento: mismo lenguaje que el resto, un poco más grande. */
+.leaflet-tooltip.tooltip-depto {
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 1.4;
+  padding: 6px 10px;
 }
 
 /* El borde de los marcadores es un atributo SVG (#0f172a): CSS lo pisa para

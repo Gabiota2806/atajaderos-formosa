@@ -26,8 +26,8 @@ import {
   ArrowPathIcon,
   ArrowRightOnRectangleIcon,
   ArrowUpTrayIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
   MapIcon,
   MoonIcon,
   PlusIcon,
@@ -96,6 +96,19 @@ export default function DashboardPage() {
       }
       return !oculto;
     });
+
+  // En escritorio (lg) la cortina flota sobre el mapa: se descuenta su ancho
+  // (388 px + 16 px de margen) al encuadrar Formosa. En móvil va debajo.
+  const [esEscritorio, setEsEscritorio] = useState(
+    () => window.matchMedia?.('(min-width: 1024px)').matches ?? false,
+  );
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)');
+    const alCambiar = () => setEsEscritorio(mq.matches);
+    mq.addEventListener('change', alCambiar);
+    return () => mq.removeEventListener('change', alCambiar);
+  }, []);
+  const margenMapa = esEscritorio && !panelOculto ? 404 : 0;
 
   const cargar = useCallback(() => {
     setCargando(true);
@@ -340,6 +353,7 @@ export default function DashboardPage() {
               onSeleccionar={setSeleccionado}
               onVerFicha={verFicha}
               riachosGeoJson={RIACHOS}
+              margenIzquierdo={margenMapa}
               className="absolute inset-0"
             />
             {cargando && (
@@ -360,16 +374,17 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* Contenedor sin overflow: la pestaña de plegado sobresale del panel
-              sin recortarse. En móvil es flujo normal (no se pliega). */}
+          {/* Cortina (escritorio): se enrolla hacia arriba con clip-path. El
+              tirador con la flecha hacia arriba va al pie, como el cordón de
+              una persiana. En móvil es flujo normal (no se pliega). */}
           <div
             data-oculto={panelOculto}
-            className="panel-plegable lg:absolute lg:bottom-4 lg:left-4 lg:top-4 lg:z-10 lg:w-[388px]"
+            className="panel-plegable lg:absolute lg:bottom-4 lg:left-4 lg:top-4 lg:z-10 lg:flex lg:w-[388px] lg:flex-col lg:rounded-2xl lg:panel-flotante"
           >
             <aside
               id="panel-triage"
               aria-label="Triage de la mesa"
-              className="space-y-4 p-4 lg:h-full lg:overflow-y-auto lg:rounded-2xl lg:panel-flotante"
+              className="space-y-4 p-4 lg:min-h-0 lg:flex-1 lg:overflow-y-auto"
             >
               {panelTriage}
             </aside>
@@ -378,11 +393,10 @@ export default function DashboardPage() {
               onClick={alternarPanel}
               aria-expanded={!panelOculto}
               aria-controls="panel-triage"
-              aria-label="Ocultar panel"
-              title="Ocultar panel"
-              className="presionable panel-flotante absolute -right-4 top-5 hidden h-11 w-8 items-center justify-center rounded-r-xl rounded-l-none border-l-0 text-slate-600 hover:text-tinta lg:flex"
+              className="presionable hidden min-h-[44px] shrink-0 items-center justify-center gap-1.5 border-t border-tinta/10 text-sm font-semibold text-slate-600 hover:text-tinta lg:flex"
             >
-              <ChevronLeftIcon className="h-4 w-4" aria-hidden="true" />
+              <ChevronUpIcon className="h-4 w-4" aria-hidden="true" />
+              Ocultar panel
             </button>
           </div>
 
@@ -398,7 +412,7 @@ export default function DashboardPage() {
               <span className="numero-ancho rounded-full bg-tinta px-2 py-0.5 text-xs font-bold text-white">
                 {cola.length}
               </span>
-              <ChevronRightIcon className="h-4 w-4 text-slate-500" aria-hidden="true" />
+              <ChevronDownIcon className="h-4 w-4 text-slate-500" aria-hidden="true" />
             </button>
           )}
         </main>
