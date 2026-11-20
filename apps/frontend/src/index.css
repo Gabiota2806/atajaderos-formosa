@@ -9,7 +9,12 @@
   --font-sans: "Archivo", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
 
   --color-tinta: #0f2a2e;
-  --color-papel: #f5f7f6;
+  /* Modo claro escalonado (no todo blanco): fondo gris verdoso suave,
+     superficies apenas más claras que el fondo y un velo medio para lo que
+     queda fuera de foco. Así hay planos y no encandila. */
+  --color-papel: #e3e9e7;
+  --color-white: #f6f8f7;
+  --color-velo: #c4cecb;
   --color-agua: #2b6cb0;
   --color-agua-claro: #d6e6f5;
   --color-tierra: #8a6b4a;
@@ -47,6 +52,7 @@
 
   --color-papel: #0b1416;
   --color-white: #131f22;
+  --color-velo: #0b1416;
   --color-tinta: #e6efee;
   --color-agua: #7cb4e8;
   --color-agua-claro: #16324a;
@@ -207,14 +213,38 @@
    mueve. Al ocultarse, visibility pasa a hidden recién al terminar: así el Tab
    no cae en botones invisibles. Al mostrarse, vuelve de inmediato. */
 @media (min-width: 1024px) {
+  /* Cabecera fija de la cortina: abierta, esquinas de abajo rectas (se une al
+     cuerpo); cerrada, se redondean recién cuando el cuerpo terminó de subir. */
+  .cabecera-cortina {
+    border-radius: 16px 16px 0 0;
+    transition:
+      border-radius 180ms ease 0ms,
+      transform 160ms var(--ease-salida);
+  }
+  .cabecera-cortina[data-oculto="true"] {
+    border-radius: 16px;
+    transition:
+      border-radius 180ms ease 300ms,
+      transform 160ms var(--ease-salida);
+  }
+  .flecha-cortina {
+    transition: transform 320ms var(--ease-movimiento);
+  }
+  .cabecera-cortina[data-oculto="true"] .flecha-cortina {
+    transform: rotate(180deg);
+  }
+  /* El cuerpo se pega a la cabecera: sin borde superior ni esquinas arriba. */
+  .cuerpo-cortina {
+    border-top-width: 0 !important;
+  }
   .panel-plegable {
-    clip-path: inset(0 0 0 0 round 16px);
+    clip-path: inset(0 0 0 0 round 0 0 16px 16px);
     transition:
       clip-path 320ms var(--ease-movimiento),
       visibility 0s linear 0s;
   }
   .panel-plegable[data-oculto="true"] {
-    clip-path: inset(0 0 100% 0 round 16px);
+    clip-path: inset(0 0 100% 0 round 0 0 16px 16px);
     visibility: hidden;
     transition:
       clip-path 320ms var(--ease-movimiento),
@@ -260,7 +290,8 @@
 
 /* Mapa base neutro: solo el semáforo de los marcadores aporta color. */
 .capa-base-gris {
-  filter: grayscale(1) contrast(1.05) brightness(1.03);
+  /* Gris medio en claro: el mapa es lo que más área ocupa; si es blanco, encandila. */
+  filter: grayscale(1) contrast(0.92) brightness(0.9);
 }
 
 /* Controles de Leaflet con el mismo lenguaje que el resto de la interfaz. */
@@ -344,12 +375,77 @@
 /* Máscara fuera de Formosa: velo del color del fondo (sigue el modo oscuro).
    CSS pisa el atributo fill que pone Leaflet. */
 .mascara-formosa {
-  fill: var(--color-papel);
-  fill-opacity: 0.86;
+  /* Gris medio en claro (Formosa resalta por contraste), fondo en oscuro. */
+  fill: var(--color-velo);
+  fill-opacity: 0.88;
 }
 /* Contorno provincial: tinta en claro; en oscuro CSS pisa el atributo stroke. */
 .oscuro path.limite-formosa {
   stroke: #cfe0de;
+}
+
+/* Los polígonos del mapa no muestran el anillo de foco del navegador al hacer
+   clic (era el recuadro blanco alrededor del departamento). */
+.leaflet-container path.leaflet-interactive:focus,
+.leaflet-container path.leaflet-interactive:focus-visible {
+  outline: none;
+}
+
+/* Foco de departamento: el resto queda bajo un velo del color de fondo... */
+.velo-foco {
+  fill: var(--color-velo);
+  fill-opacity: 0;
+  transition: fill-opacity 380ms var(--ease-salida);
+}
+.hay-foco .velo-foco:not(.es-foco) {
+  fill-opacity: 0.72;
+}
+/* ...el elegido FLOTA como una placa: sombra en el piso, paredes que dan
+   espesor y la cara superior levantada 8 px (= ALTURA_PLACA del mapa). */
+.depto-sombra {
+  fill-opacity: 0.55;
+  filter: blur(7px);
+  transform: translate(4px, 12px);
+  animation: aparecer-sombra 600ms var(--ease-salida) both;
+}
+@keyframes aparecer-sombra {
+  from {
+    fill-opacity: 0;
+    transform: translate(0, 0);
+  }
+}
+.depto-pared {
+  transform: translateY(var(--alto, 0));
+  animation: aparecer-pared 600ms var(--ease-salida) var(--retraso, 0ms) both;
+}
+@keyframes aparecer-pared {
+  from {
+    opacity: 0;
+    transform: translateY(0);
+  }
+}
+.depto-elevado {
+  transform: translateY(-8px);
+  filter: drop-shadow(0 0 10px rgb(45 212 191 / 0.7));
+  animation: elevar-depto 650ms var(--ease-salida) both;
+}
+@keyframes elevar-depto {
+  from {
+    transform: translateY(0);
+    fill-opacity: 0;
+  }
+}
+/* ...y los marcadores de otros departamentos se atenúan. */
+.fuera-de-foco {
+  opacity: 0.25;
+  transition: opacity 300ms ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .depto-sombra,
+  .depto-pared,
+  .depto-elevado {
+    animation: none;
+  }
 }
 
 /* Tooltip del departamento: mismo lenguaje que el resto, un poco más grande. */
