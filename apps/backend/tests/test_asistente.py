@@ -152,7 +152,7 @@ def test_modo_1_con_gemini_valido_marca_ia_asistida(
 ) -> None:
     def manejador(request: httpx.Request) -> httpx.Response:
         assert request.headers["x-goog-api-key"] == "clave-de-prueba-no-real"
-        assert "gemini-2.5-flash:generateContent" in str(request.url)
+        assert f"{settings.gemini_model}:generateContent" in str(request.url)
         return respuesta_gemini(
             {
                 "resumen_tecnico": "Cierre transversal con borde libre crítico.",
