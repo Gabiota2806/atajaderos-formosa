@@ -1,3 +1,4 @@
+import AvisoDepartamento from '@/components/AvisoDepartamento';
 import CodigoAtajadero from '@/components/CodigoAtajadero';
 import CopilotoIaPanel from '@/components/CopilotoIaPanel';
 import EtiquetaCategoria from '@/components/EtiquetaCategoria';
@@ -225,6 +226,7 @@ export default function DetalleAtajaderoModal({
               </button>
             </p>
           )}
+          {detalle && <AvisoDepartamento atajadero={detalle} />}
         </div>
       }
       pie={

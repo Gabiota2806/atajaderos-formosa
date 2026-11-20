@@ -26,8 +26,7 @@ import {
   ArrowPathIcon,
   ArrowRightOnRectangleIcon,
   ArrowUpTrayIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
+  ChevronUpIcon,
   MapIcon,
   MoonIcon,
   PlusIcon,
@@ -96,6 +95,19 @@ export default function DashboardPage() {
       }
       return !oculto;
     });
+
+  // En escritorio (lg) la cortina flota sobre el mapa: se descuenta su ancho
+  // (388 px + 16 px de margen) al encuadrar Formosa. En móvil va debajo.
+  const [esEscritorio, setEsEscritorio] = useState(
+    () => window.matchMedia?.('(min-width: 1024px)').matches ?? false,
+  );
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)');
+    const alCambiar = () => setEsEscritorio(mq.matches);
+    mq.addEventListener('change', alCambiar);
+    return () => mq.removeEventListener('change', alCambiar);
+  }, []);
+  const margenMapa = esEscritorio && !panelOculto ? 404 : 0;
 
   const cargar = useCallback(() => {
     setCargando(true);
@@ -340,6 +352,7 @@ export default function DashboardPage() {
               onSeleccionar={setSeleccionado}
               onVerFicha={verFicha}
               riachosGeoJson={RIACHOS}
+              margenIzquierdo={margenMapa}
               className="absolute inset-0"
             />
             {cargando && (
@@ -360,47 +373,55 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* Contenedor sin overflow: la pestaña de plegado sobresale del panel
-              sin recortarse. En móvil es flujo normal (no se pliega). */}
-          <div
-            data-oculto={panelOculto}
-            className="panel-plegable lg:absolute lg:bottom-4 lg:left-4 lg:top-4 lg:z-10 lg:w-[388px]"
-          >
-            <aside
-              id="panel-triage"
-              aria-label="Triage de la mesa"
-              className="space-y-4 p-4 lg:h-full lg:overflow-y-auto lg:rounded-2xl lg:panel-flotante"
-            >
-              {panelTriage}
-            </aside>
+          {/* Cortina (escritorio): la cabecera queda siempre, del mismo ancho
+              que el panel; el cuerpo se enrolla dentro de ella con clip-path.
+              El contenedor no captura el mouse: con la cortina arriba, el mapa
+              de abajo sigue respondiendo. En móvil es flujo normal. */}
+          <div className="lg:pointer-events-none lg:absolute lg:bottom-4 lg:left-4 lg:top-4 lg:z-10 lg:flex lg:w-[388px] lg:flex-col">
             <button
               type="button"
               onClick={alternarPanel}
               aria-expanded={!panelOculto}
               aria-controls="panel-triage"
-              aria-label="Ocultar panel"
-              title="Ocultar panel"
-              className="presionable panel-flotante absolute -right-4 top-5 hidden h-11 w-8 items-center justify-center rounded-r-xl rounded-l-none border-l-0 text-slate-600 hover:text-tinta lg:flex"
+              data-oculto={panelOculto}
+              className="cabecera-cortina presionable panel-flotante pointer-events-auto hidden min-h-[52px] shrink-0 items-center gap-2.5 px-4 text-left lg:flex"
             >
-              <ChevronLeftIcon className="h-4 w-4" aria-hidden="true" />
-            </button>
-          </div>
-
-          {panelOculto && (
-            <button
-              type="button"
-              onClick={alternarPanel}
-              aria-expanded={false}
-              aria-controls="panel-triage"
-              className="presionable entrada-suave panel-flotante absolute left-4 top-4 z-10 hidden min-h-[44px] items-center gap-2 rounded-xl px-3.5 text-sm font-semibold text-tinta lg:inline-flex"
-            >
-              Requiere decisión
-              <span className="numero-ancho rounded-full bg-tinta px-2 py-0.5 text-xs font-bold text-white">
+              <span className="titulo-ancho flex-1 text-[15px] font-extrabold text-tinta">
+                Panel de triage
+              </span>
+              <span className="numero-ancho rounded-full bg-tinta px-2.5 py-0.5 text-xs font-bold text-white">
                 {cola.length}
               </span>
-              <ChevronRightIcon className="h-4 w-4 text-slate-500" aria-hidden="true" />
+              <span className="sr-only">
+                {panelOculto ? 'Mostrar panel' : 'Ocultar panel'}
+              </span>
+              {/* Una sola flecha que gira: arriba = ocultar, abajo = mostrar. */}
+              <ChevronUpIcon className="flecha-cortina h-5 w-5 text-slate-500" aria-hidden="true" />
             </button>
-          )}
+
+            <div
+              data-oculto={panelOculto}
+              className="panel-plegable cuerpo-cortina lg:pointer-events-auto lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:rounded-b-2xl lg:panel-flotante"
+            >
+              <aside
+                id="panel-triage"
+                aria-label="Triage de la mesa"
+                className="space-y-4 p-4 lg:min-h-0 lg:flex-1 lg:overflow-y-auto"
+              >
+                {panelTriage}
+              </aside>
+              <button
+                type="button"
+                onClick={alternarPanel}
+                aria-expanded={!panelOculto}
+                aria-controls="panel-triage"
+                className="presionable hidden min-h-[44px] shrink-0 items-center justify-center gap-1.5 border-t border-tinta/10 text-sm font-semibold text-slate-600 hover:text-tinta lg:flex"
+              >
+                <ChevronUpIcon className="h-4 w-4" aria-hidden="true" />
+                Ocultar panel
+              </button>
+            </div>
+          </div>
         </main>
       )}
 

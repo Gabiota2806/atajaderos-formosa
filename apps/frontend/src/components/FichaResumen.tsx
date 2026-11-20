@@ -1,3 +1,4 @@
+import AvisoDepartamento from '@/components/AvisoDepartamento';
 import CodigoAtajadero from '@/components/CodigoAtajadero';
 import EtiquetaCategoria from '@/components/EtiquetaCategoria';
 import {
@@ -78,6 +79,7 @@ export default function FichaResumen({
       <p className="mt-0.5 font-mono text-xs text-slate-500">
         {a.latitud.toFixed(4)}, {a.longitud.toFixed(4)}
       </p>
+      <AvisoDepartamento atajadero={a} />
 
       <div
         className={`mt-3 rounded-xl border px-3 py-2.5 ${CLASES_ESCURRIMIENTO[a.interrumpe_escurrimiento]}`}
