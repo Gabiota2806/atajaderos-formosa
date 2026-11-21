@@ -3,6 +3,11 @@
 Todos los cambios notables de **Atajaderos Formosa (AI LAB Misión: Código Formosa · Equipo 6 UTN)** serán documentados en este archivo.
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y versionado semántico.
 
+## [Unreleased]
+### Added
+- Creación de `docs/guion_video_y_pitch.md` (guion segundo a segundo del video demo ≤ 120 s, speech de 3 minutos, Q&A y maquetación del póster técnico del sábado 21/11 — `#7`).
+- Registro en `docs/ficha_fuentes.md` de las capas vectoriales IGN WFS incorporadas al mapa recortado de Formosa y control geométrico por departamento (PR `#21`).
+
 ## [1.0.0] - 2026-11-20
 ### Added
 - **Monorepo 100 % Dockerizado:** `apps/backend/` (Python `3.12.16` + `uv` + FastAPI + SQLAlchemy 2 + Alembic + `psycopg` + Pydantic v2 + `pytest` + Ruff), `apps/frontend/` (Bun `1.4.5` + React 18 + Vite 6 + TypeScript + Tailwind CSS v4 + Leaflet + Heroicons SVG) y `postgres` (PostgreSQL `18.6` + PostGIS `3.7`).

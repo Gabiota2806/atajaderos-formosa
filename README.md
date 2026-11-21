@@ -189,6 +189,7 @@ docker compose exec frontend bun run build
 
 - [Ficha técnica (entregable 1 página)](docs/ficha_tecnica.md)
 - [Ficha de fuentes (entregable)](docs/ficha_fuentes.md)
+- [Guion de video demo (≤ 120 s), speech de 3 min y diseño de póster](docs/guion_video_y_pitch.md)
 - [Resumen del desafío y Las 7 Preguntas](docs/00_resumen_desafio.md)
 - [Arquitectura y contrato técnico](docs/01_arquitectura_y_contrato.md)
 - [Antecedentes y soluciones comparadas](docs/03_antecedentes_y_soluciones_comparadas.md)
